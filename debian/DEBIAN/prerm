@@ -1,0 +1,7 @@
+#!/bin/bash
+
+echo "Prerm running"
+pip3 uninstall -y hobot_sppy
+pip3 uninstall -y hobot-dnn
+exit 0
+
