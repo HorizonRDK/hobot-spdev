@@ -162,15 +162,15 @@ static int py_obj_to_rect(PyObject *obj, int *x, int *y, int *width, int *height
 
 static PyObject *Camera_new(PyTypeObject *type, PyObject *args, PyObject *kw)
 {
-    libsppydev_Object *self = (libsppydev_Object *)type->tp_alloc(type, 0);
+    libsrcampy_Object *self = (libsrcampy_Object *)type->tp_alloc(type, 0);
     self->pobj = nullptr;
     return (PyObject *)self;
 }
 
-static void Camera_dealloc(libsppydev_Object *self)
+static void Camera_dealloc(libsrcampy_Object *self)
 {
     if (self->pobj) {
-        delete (SrPyCamera *)self->pobj;
+        delete (VPPCamera *)self->pobj;
         self->pobj = nullptr;
     }
 
@@ -181,20 +181,20 @@ static void Camera_dealloc(libsppydev_Object *self)
     self->ob_base.ob_type->tp_free(self);
 }
 
-static int Camera_init(libsppydev_Object *self, PyObject *args, PyObject *kw)
+static int Camera_init(libsrcampy_Object *self, PyObject *args, PyObject *kw)
 {
     if (self->pobj) {
         PyErr_SetString(PyExc_Exception, "__init__ already called");
         return -1;
     }
-    self->pobj = new SrPyCamera();
+    self->pobj = new VPPCamera();
     self->pframe = new ImageFrame();
-    self->object = SrPy_Camera;
+    self->object = VPP_CAMERA;
 
     return 0;
 }
 
-PyObject *Camera_open_cam(libsppydev_Object *self, PyObject *args, PyObject *kw)
+PyObject *Camera_open_cam(libsrcampy_Object *self, PyObject *args, PyObject *kw)
 {
     if (!(self->pobj && self->pframe)) {
         PyErr_SetString(PyExc_Exception, "camera not inited");
@@ -204,7 +204,7 @@ PyObject *Camera_open_cam(libsppydev_Object *self, PyObject *args, PyObject *kw)
     int pipe_id, video_index, fps = 30, chn_num = 0;
     int width[CAMERA_CHN_NUM], height[CAMERA_CHN_NUM];
     PyObject *width_obj = NULL, *height_obj = NULL, *size_obj = NULL;
-    SrPyCamera *cam = (SrPyCamera *)self->pobj;
+    VPPCamera *cam = (VPPCamera *)self->pobj;
     static char *kwlist[] = {(char *)"pipe_id", (char *)"video_index",
         (char *)"fps", (char *)"width", (char *)"height", (char *)"size", NULL};
 
@@ -232,7 +232,7 @@ PyObject *Camera_open_cam(libsppydev_Object *self, PyObject *args, PyObject *kw)
     return Py_BuildValue("i", cam->OpenCamera(pipe_id, video_index, fps, chn_num, width, height));
 }
 
-PyObject *Camera_open_vps(libsppydev_Object *self, PyObject *args, PyObject *kw)
+PyObject *Camera_open_vps(libsrcampy_Object *self, PyObject *args, PyObject *kw)
 {
     if (!(self->pobj && self->pframe)) {
         PyErr_SetString(PyExc_Exception, "camera not inited");
@@ -246,7 +246,7 @@ PyObject *Camera_open_vps(libsppydev_Object *self, PyObject *args, PyObject *kw)
     int crop_width[CAMERA_CHN_NUM] = {0}, crop_height[CAMERA_CHN_NUM] = {0};
     PyObject *dst_width_obj = NULL, *dst_height_obj = NULL, *rotate_obj = NULL;
     PyObject *crop_rect_obj = NULL, *src_size_obj = NULL, *dst_size_obj = NULL;
-    SrPyCamera *cam = (SrPyCamera *)self->pobj;
+    VPPCamera *cam = (VPPCamera *)self->pobj;
     static char *kwlist[] = {(char *)"pipe_id", (char *)"process_mode",
         (char *)"src_width", (char *)"src_height",
         (char *)"dst_width", (char *)"dst_height",
@@ -294,21 +294,21 @@ PyObject *Camera_open_vps(libsppydev_Object *self, PyObject *args, PyObject *kw)
         dst_width, dst_height, crop_x, crop_y, crop_width, crop_height, rotate));
 }
 
-PyObject *Camera_close_cam(libsppydev_Object *self)
+PyObject *Camera_close_cam(libsrcampy_Object *self)
 {
     if (!(self->pobj && self->pframe)) {
         PyErr_SetString(PyExc_Exception, "camera not inited");
         Py_RETURN_NONE;
     }
 
-    SrPyCamera *cam = (SrPyCamera *)self->pobj;
+    VPPCamera *cam = (VPPCamera *)self->pobj;
 
     cam->CloseCamera();
 
     Py_RETURN_NONE;
 }
 
-PyObject *Camera_get_frame(libsppydev_Object *self, PyObject *args, PyObject *kw)
+PyObject *Camera_get_img(libsrcampy_Object *self, PyObject *args, PyObject *kw)
 {
     if (!(self->pobj && self->pframe)) {
         PyErr_SetString(PyExc_Exception, "camera not inited");
@@ -317,7 +317,7 @@ PyObject *Camera_get_frame(libsppydev_Object *self, PyObject *args, PyObject *kw
 
     DevModule module = Dev_IPU;
     int width = 0, height = 0;
-    SrPyCamera *cam = (SrPyCamera *)self->pobj;
+    VPPCamera *cam = (VPPCamera *)self->pobj;
     PyObject *img_obj = nullptr, *uv_obj = nullptr;
     static char *kwlist[] = {(char *)"module", (char *)"width", (char *)"height", NULL};
 
@@ -342,7 +342,7 @@ PyObject *Camera_get_frame(libsppydev_Object *self, PyObject *args, PyObject *kw
     Py_RETURN_NONE;
 }
 
-PyObject *Camera_set_frame(libsppydev_Object *self, PyObject *args, PyObject *kw)
+PyObject *Camera_set_img(libsrcampy_Object *self, PyObject *args, PyObject *kw)
 {
     if (!(self->pobj && self->pframe)) {
         PyErr_SetString(PyExc_Exception, "camera not inited");
@@ -350,7 +350,7 @@ PyObject *Camera_set_frame(libsppydev_Object *self, PyObject *args, PyObject *kw
     }
 
     DevModule module = Dev_IPU;
-    SrPyCamera *cam = (SrPyCamera *)self->pobj;
+    VPPCamera *cam = (VPPCamera *)self->pobj;
     PyObject *img_obj = nullptr;
     static char *kwlist[] = {(char *)"img_obj", NULL};
 
@@ -367,54 +367,54 @@ PyObject *Camera_set_frame(libsppydev_Object *self, PyObject *args, PyObject *kw
 
 static PyObject *Encoder_new(PyTypeObject *type, PyObject *args, PyObject *kw)
 {
-    libsppydev_Object *self = (libsppydev_Object *)type->tp_alloc(type, 0);
+    libsrcampy_Object *self = (libsrcampy_Object *)type->tp_alloc(type, 0);
     self->pobj = nullptr;
     return (PyObject *)self;
 }
 
-static void Encoder_dealloc(libsppydev_Object *self)
+static void Encoder_dealloc(libsrcampy_Object *self)
 {
     if (self->pobj) {
-        delete static_cast<SrPyEncode *>(self->pobj);
+        delete static_cast<VPPEncode *>(self->pobj);
         self->pobj = nullptr;
     }
 
     self->ob_base.ob_type->tp_free(self);
 }
 
-static int Encoder_init(libsppydev_Object *self, PyObject *args, PyObject *kw)
+static int Encoder_init(libsrcampy_Object *self, PyObject *args, PyObject *kw)
 {
     if (self->pobj) {
         PyErr_SetString(PyExc_Exception, "__init__ already called");
         return -1;
     }
-    self->pobj = static_cast<void *>(new SrPyEncode());
-    self->object = SrPy_Encode;
+    self->pobj = static_cast<void *>(new VPPEncode());
+    self->object = VPP_ENCODE;
 
     return 0;
 }
 
-static PyObject *Encoder_encode(libsppydev_Object *self, PyObject *args, PyObject *kw)
+static PyObject *Encoder_encode(libsrcampy_Object *self, PyObject *args, PyObject *kw)
 {
     if (!self->pobj) {
         PyErr_SetString(PyExc_Exception, "encoder not inited");
         return Py_BuildValue("i", -1);
     }
 
-    int venc_chn = 0, type = 0, width = 0, height = 0, bits = 8000;
+    int vot_chn = 0, type = 0, width = 0, height = 0, bits = 8000;
     static char *kwlist[] = {(char *)"video_chn", (char *)"type",
         (char *)"width", (char *)"height", (char *)"bits", NULL};
 
-    if (!PyArg_ParseTupleAndKeywords(args, kw, "iiii|i", kwlist, &venc_chn, &type, &width, &height, &bits)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "iiii|i", kwlist, &vot_chn, &type, &width, &height, &bits)) {
         return Py_BuildValue("i", -1);
     }
 
-    SrPyEncode *pobj = static_cast<SrPyEncode *>(self->pobj);
+    VPPEncode *pobj = static_cast<VPPEncode *>(self->pobj);
 
-    return Py_BuildValue("i", pobj->do_encoding(venc_chn, type, width, height, bits));
+    return Py_BuildValue("i", pobj->do_encoding(vot_chn, type, width, height, bits));
 }
 
-static PyObject *Encoder_send_frame(libsppydev_Object *self, PyObject *args, PyObject *kw)
+static PyObject *Encoder_encode_file(libsrcampy_Object *self, PyObject *args, PyObject *kw)
 {
     if (!self->pobj) {
         PyErr_SetString(PyExc_Exception, "encoder not inited");
@@ -424,7 +424,7 @@ static PyObject *Encoder_send_frame(libsppydev_Object *self, PyObject *args, PyO
     char *addr = nullptr;
     int32_t size = 0;
     PyObject *img_obj = nullptr;
-    SrPyEncode *pobj = static_cast<SrPyEncode *>(self->pobj);
+    VPPEncode *pobj = static_cast<VPPEncode *>(self->pobj);
     static char *kwlist[] = {(char *)"img", NULL};
 
     if (!PyArg_ParseTupleAndKeywords(args, kw, "O", kwlist, &img_obj)) {
@@ -434,17 +434,17 @@ static PyObject *Encoder_send_frame(libsppydev_Object *self, PyObject *args, PyO
     addr = PyBytes_AsString(img_obj);
     size = PyBytes_Size(img_obj);
 
-    return Py_BuildValue("i", pobj->send_frame(addr, size));
+    return Py_BuildValue("i", pobj->encode_file(addr, size));
 }
 
-static PyObject *Encoder_get_frame(libsppydev_Object *self)
+static PyObject *Encoder_get_img(libsrcampy_Object *self)
 {
     if (!self->pobj) {
         PyErr_SetString(PyExc_Exception, "encoder not inited");
         Py_RETURN_NONE;
     }
 
-    SrPyEncode *pobj = static_cast<SrPyEncode *>(self->pobj);
+    VPPEncode *pobj = static_cast<VPPEncode *>(self->pobj);
     PyObject *img_obj = nullptr;
 
     self->pframe = pobj->get_frame();
@@ -460,14 +460,14 @@ static PyObject *Encoder_get_frame(libsppydev_Object *self)
     Py_RETURN_NONE;
 }
 
-static PyObject *Encoder_close(libsppydev_Object *self)
+static PyObject *Encoder_close(libsrcampy_Object *self)
 {
     if (!self->pobj) {
         PyErr_SetString(PyExc_Exception, "encoder not inited");
         return Py_BuildValue("i", -1);
     }
 
-    SrPyEncode *pobj = static_cast<SrPyEncode *>(self->pobj);
+    VPPEncode *pobj = static_cast<VPPEncode *>(self->pobj);
 
     return Py_BuildValue("i", pobj->undo_encoding());
 }
@@ -476,35 +476,35 @@ static PyObject *Encoder_close(libsppydev_Object *self)
 
 static PyObject *Decoder_new(PyTypeObject *type, PyObject *args, PyObject *kw)
 {
-    libsppydev_Object *self = (libsppydev_Object *)type->tp_alloc(type, 0);
+    libsrcampy_Object *self = (libsrcampy_Object *)type->tp_alloc(type, 0);
     self->pobj = nullptr;
     return (PyObject *)self;
 }
 
-static void Decoder_dealloc(libsppydev_Object *self)
+static void Decoder_dealloc(libsrcampy_Object *self)
 {
     if (self->pobj) {
-        delete static_cast<SrPyDecode *>(self->pobj);
+        delete static_cast<VPPDecode *>(self->pobj);
         self->pobj = nullptr;
     }
 
     self->ob_base.ob_type->tp_free(self);
 }
 
-static int Decoder_init(libsppydev_Object *self, PyObject *args, PyObject *kw)
+static int Decoder_init(libsrcampy_Object *self, PyObject *args, PyObject *kw)
 {
     if (self->pobj) {
         PyErr_SetString(PyExc_Exception, "__init__ already called");
         return -1;
     }
 
-    self->pobj = static_cast<void *>(new SrPyDecode());
-    self->object = SrPy_Decode;
+    self->pobj = static_cast<void *>(new VPPDecode());
+    self->object = VPP_DECODE;
 
     return 0;
 }
 
-static PyObject *Decoder_decode(libsppydev_Object *self, PyObject *args, PyObject *kw)
+static PyObject *Decoder_decode(libsrcampy_Object *self, PyObject *args, PyObject *kw)
 {
     if (!self->pobj) {
         PyErr_SetString(PyExc_Exception, "decoder not inited");
@@ -525,7 +525,7 @@ static PyObject *Decoder_decode(libsppydev_Object *self, PyObject *args, PyObjec
         return Py_BuildValue("i", -1);
     }
 
-    SrPyDecode *pobj = static_cast<SrPyDecode *>(self->pobj);
+    VPPDecode *pobj = static_cast<VPPDecode *>(self->pobj);
 
     ret = pobj->do_decoding(string, video_chn, type, width, height, &frame_count, dec_mode);
 
@@ -536,14 +536,14 @@ static PyObject *Decoder_decode(libsppydev_Object *self, PyObject *args, PyObjec
     return list;
 }
 
-static PyObject *Decoder_get_frame(libsppydev_Object *self)
+static PyObject *Decoder_get_img(libsrcampy_Object *self)
 {
     if (!self->pobj) {
         PyErr_SetString(PyExc_Exception, "decoder not inited");
         return Py_BuildValue("i", -1);
     }
 
-    SrPyDecode *pobj = static_cast<SrPyDecode *>(self->pobj);
+    VPPDecode *pobj = static_cast<VPPDecode *>(self->pobj);
     PyObject *img_obj = nullptr, *uv_obj = nullptr;
 
     self->pframe = pobj->get_frame();
@@ -562,10 +562,10 @@ static PyObject *Decoder_get_frame(libsppydev_Object *self)
     Py_RETURN_NONE;
 }
 
-static PyObject *Decoder_send_frame(libsppydev_Object *self, PyObject *args, PyObject *kw)
+static PyObject *Decoder_set_img(libsrcampy_Object *self, PyObject *args, PyObject *kw)
 {
     PyObject *img_obj = nullptr;
-    libsppydev_Object *pobj = nullptr;
+    libsrcampy_Object *pobj = nullptr;
     char *addr = nullptr;
     int size = 0;
     int chn = -1;
@@ -580,25 +580,25 @@ static PyObject *Decoder_send_frame(libsppydev_Object *self, PyObject *args, PyO
         return Py_BuildValue("i", -1);
     }
 
-    pobj = (libsppydev_Object *)self->pobj;
+    pobj = (libsrcampy_Object *)self->pobj;
     addr = PyBytes_AsString(img_obj);
     size = PyBytes_Size(img_obj);
 
     if (chn < 0) {
-        chn = ((SrPyDecode *)pobj)->m_chn;
+        chn = ((VPPDecode *)pobj)->m_dec_obj.get()->m_chn;
     }
 
-    return Py_BuildValue("i", ((SrPyDecode *)pobj)->send_frame(chn, addr, size, eos));
+    return Py_BuildValue("i", ((VPPDecode *)pobj)->send_frame(chn, addr, size, eos));
 }
 
-static PyObject *Decoder_close(libsppydev_Object *self)
+static PyObject *Decoder_close(libsrcampy_Object *self)
 {
     if (!self->pobj) {
         PyErr_SetString(PyExc_Exception, "decoder not inited");
         return Py_BuildValue("i", -1);
     }
 
-    SrPyDecode *pobj = static_cast<SrPyDecode *>(self->pobj);
+    VPPDecode *pobj = static_cast<VPPDecode *>(self->pobj);
 
     return Py_BuildValue("i", pobj->undo_decoding());
 }
@@ -608,39 +608,39 @@ static PyObject *Decoder_close(libsppydev_Object *self)
 
 static PyObject *Display_new(PyTypeObject *type, PyObject *args, PyObject *kw)
 {
-    libsppydev_Object *self = (libsppydev_Object *)type->tp_alloc(type, 0);
+    libsrcampy_Object *self = (libsrcampy_Object *)type->tp_alloc(type, 0);
     self->pobj = nullptr;
     return (PyObject *)self;
 }
 
-static void Display_dealloc(libsppydev_Object *self)
+static void Display_dealloc(libsrcampy_Object *self)
 {
     if (self->pobj) {
-        delete static_cast<SrPyDisplay *>(self->pobj);
+        delete static_cast<VPPDisplay *>(self->pobj);
         self->pobj = nullptr;
     }
 
     self->ob_base.ob_type->tp_free(self);
 }
 
-static int Display_init(libsppydev_Object *self, PyObject *args, PyObject *kw)
+static int Display_init(libsrcampy_Object *self, PyObject *args, PyObject *kw)
 {
     if (self->pobj) {
         PyErr_SetString(PyExc_Exception, "__init__ already called");
         return -1;
     }
 
-    self->pobj = static_cast<void *>(new SrPyDisplay());
+    self->pobj = static_cast<void *>(new VPPDisplay());
 
-    self->object = SrPy_Display;
+    self->object = VPP_DISPLAY;
 
     return 0;
 }
 
-static PyObject *Display_display(libsppydev_Object *self, PyObject *args, PyObject *kw)
+static PyObject *Display_display(libsrcampy_Object *self, PyObject *args, PyObject *kw)
 {
     int width = 1920, height = 1080, vot_chn = 0, chn_width = 0, chn_height = 0;
-    int vot_intf = 0, vot_out_mode = 1;
+    int vot_intf = VOT_OUTPUT_1920x1080, vot_out_mode = HB_VOT_OUTPUT_BT1120;
     static char *kwlist[] = {(char *)"chn", (char *)"width", (char *)"height",
         (char *)"vot_intf", (char *)"vot_out_mode",
         (char *)"chn_width", (char *)"chn_height", NULL};
@@ -658,13 +658,13 @@ static PyObject *Display_display(libsppydev_Object *self, PyObject *args, PyObje
         chn_height = height;
     }
 
-    return Py_BuildValue("i", ((SrPyDisplay *)(self->pobj))->x3_vot_init(vot_chn, width, height, vot_intf, vot_out_mode, chn_width, chn_height));
+    return Py_BuildValue("i", ((VPPDisplay *)(self->pobj))->x3_vot_init(vot_chn, width, height, vot_intf, vot_out_mode, chn_width, chn_height));
 }
 
-static PyObject *Display_set_img(libsppydev_Object *self, PyObject *args, PyObject *kw)
+static PyObject *Display_set_img(libsrcampy_Object *self, PyObject *args, PyObject *kw)
 {
     PyObject *img_obj = nullptr;
-    libsppydev_Object *pobj = nullptr;
+    libsrcampy_Object *pobj = nullptr;
     char *addr = nullptr;
     int size = 0;
     int chn = 0;
@@ -678,16 +678,16 @@ static PyObject *Display_set_img(libsppydev_Object *self, PyObject *args, PyObje
         return Py_BuildValue("i", -1);
     }
 
-    pobj = (libsppydev_Object *)self->pobj;
+    pobj = (libsrcampy_Object *)self->pobj;
     addr = PyBytes_AsString(img_obj);
     size = PyBytes_Size(img_obj);
 
-    return Py_BuildValue("i", ((SrPyDisplay *)pobj)->set_img(addr, size, chn));
+    return Py_BuildValue("i", ((VPPDisplay *)pobj)->set_img(addr, size, chn));
 }
 
-static PyObject *Display_set_graph_rect(libsppydev_Object *self, PyObject *args, PyObject *kw)
+static PyObject *Display_set_graph_rect(libsrcampy_Object *self, PyObject *args, PyObject *kw)
 {
-    libsppydev_Object *pobj = nullptr;
+    libsrcampy_Object *pobj = nullptr;
     int x0, y0, x1, y1, chn = 2, flush = 0, line_width = 4;
     uint64_t color = 0xffff0000;
     static char *kwlist[] = {(char *)"x0", (char *)"y0", (char *)"x1", (char *)"y1",
@@ -701,14 +701,14 @@ static PyObject *Display_set_graph_rect(libsppydev_Object *self, PyObject *args,
         return Py_BuildValue("i", -1);
     }
 
-    pobj = (libsppydev_Object *)self->pobj;
+    pobj = (libsrcampy_Object *)self->pobj;
 
-    return Py_BuildValue("i", ((SrPyDisplay *)pobj)->set_graph_rect(x0, y0, x1, y1, chn, flush, (uint32_t)color, line_width));
+    return Py_BuildValue("i", ((VPPDisplay *)pobj)->set_graph_rect(x0, y0, x1, y1, chn, flush, (uint32_t)color, line_width));
 }
 
-static PyObject *Display_set_graph_word(libsppydev_Object *self, PyObject *args, PyObject *kw)
+static PyObject *Display_set_graph_word(libsrcampy_Object *self, PyObject *args, PyObject *kw)
 {
-    libsppydev_Object *pobj = nullptr;
+    libsrcampy_Object *pobj = nullptr;
     int x, y, chn = 2, flush = 0, line_width = 1;
     uint64_t color = 0xffff0000;
     PyObject *str_obj = nullptr;
@@ -723,31 +723,160 @@ static PyObject *Display_set_graph_word(libsppydev_Object *self, PyObject *args,
         return Py_BuildValue("i", -1);
     }
 
-    pobj = (libsppydev_Object *)self->pobj;
+    pobj = (libsrcampy_Object *)self->pobj;
 
-    return Py_BuildValue("i", ((SrPyDisplay *)pobj)->set_graph_word(x, y, PyBytes_AsString(str_obj), chn, flush, (uint32_t)color, line_width));
+    return Py_BuildValue("i", ((VPPDisplay *)pobj)->set_graph_word(x, y, PyBytes_AsString(str_obj), chn, flush, (uint32_t)color, line_width));
 }
 
-static PyObject *Display_close(libsppydev_Object *self)
+static PyObject *Display_close(libsrcampy_Object *self)
 {
     if (!self->pobj) {
         PyErr_SetString(PyExc_Exception, "display not inited");
         return Py_BuildValue("i", -1);
     }
 
-    return Py_BuildValue("i", ((SrPyDisplay *)self->pobj)->x3_vot_deinit());
+    return Py_BuildValue("i", ((VPPDisplay *)self->pobj)->x3_vot_deinit());
 }
 
-static PyObject *Module_bind(libsppydev_Object *self, PyObject *args, PyObject *kw)
+static PyObject *Module_bind(libsrcampy_Object *self, PyObject *args, PyObject *kw)
 {
-    int ret = 0;
+    PyObject *src_arg = nullptr, *dst_arg = nullptr;
+    libsrcampy_Object *src_obj = nullptr, *dst_obj = nullptr;
+    struct HB_SYS_MOD_S src_mod, dst_mod;
+    int ret = 0, width = 0, height = 0;
+    static char *kwlist[] = {(char *)"src", (char *)"dst", NULL};
+
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "OO", kwlist, &src_arg, &dst_arg)) {
+        return Py_BuildValue("i", -1);
+    }
+
+    src_obj = (libsrcampy_Object *)src_arg;
+    dst_obj = (libsrcampy_Object *)dst_arg;
+
+    if (dst_obj->object == VPP_ENCODE) {
+        dst_mod.enModId = HB_ID_VENC;
+        dst_mod.s32DevId = ((VPPEncode *)dst_obj->pobj)->m_enc_obj.get()->m_chn;
+        dst_mod.s32ChnId = 0;
+        width = ((VPPEncode *)dst_obj->pobj)->m_enc_obj.get()->m_width;
+        height = ((VPPEncode *)dst_obj->pobj)->m_enc_obj.get()->m_height;
+    } else if (dst_obj->object == VPP_DECODE) {
+        dst_mod.enModId = HB_ID_VDEC;
+        dst_mod.s32DevId = ((VPPDecode *)dst_obj->pobj)->m_dec_obj.get()->m_chn;
+        dst_mod.s32ChnId = 0;
+        width = ((VPPDecode *)dst_obj->pobj)->m_dec_obj.get()->m_width;
+        height = ((VPPDecode *)dst_obj->pobj)->m_dec_obj.get()->m_height;
+    } else if (dst_obj->object == VPP_DISPLAY) {
+        dst_mod.enModId = HB_ID_VOT;
+        dst_mod.s32DevId = 0;
+        dst_mod.s32ChnId = ((VPPDisplay *)dst_obj->pobj)->get_video_chn();
+        width = ((VPPDisplay *)dst_obj->pobj)->m_chn_width[dst_mod.s32ChnId];
+        height = ((VPPDisplay *)dst_obj->pobj)->m_chn_height[dst_mod.s32ChnId];
+    } else if (dst_obj->object == VPP_CAMERA) {
+        dst_mod.enModId = HB_ID_VPS;
+        dst_mod.s32DevId = 0;
+        dst_mod.s32ChnId = 0;
+    } else {
+        PRINT("bind error dst object:%d\n", dst_obj->object);
+        return Py_BuildValue("i", -1);
+    }
+    if (src_obj->object == VPP_CAMERA) {
+        src_mod.enModId = HB_ID_VPS;
+        src_mod.s32DevId = ((VPPCamera *)src_obj->pobj)->GetPipeId();
+        src_mod.s32ChnId = ((VPPCamera *)src_obj->pobj)->GetChnId(dst_obj->object, 1, width, height);
+    } else if (src_obj->object == VPP_ENCODE) {
+        src_mod.enModId = HB_ID_VENC;
+        src_mod.s32DevId = ((VPPEncode *)src_obj->pobj)->m_enc_obj.get()->m_chn;
+        src_mod.s32ChnId = 0;
+        width = ((VPPEncode *)src_obj->pobj)->m_enc_obj.get()->m_width;
+        height = ((VPPEncode *)src_obj->pobj)->m_enc_obj.get()->m_height;
+    } else if (src_obj->object == VPP_DECODE) {
+        src_mod.enModId = HB_ID_VDEC;
+        src_mod.s32DevId = ((VPPDecode *)src_obj->pobj)->m_dec_obj.get()->m_chn;
+        src_mod.s32ChnId = 0;
+        width = ((VPPDecode *)src_obj->pobj)->m_dec_obj.get()->m_width;
+        height = ((VPPDecode *)src_obj->pobj)->m_dec_obj.get()->m_height;
+    } else {
+        PRINT("bind error src object:%d\n", src_obj->object);
+        return Py_BuildValue("i", -1);
+    }
+    ret = HB_SYS_Bind(&src_mod, &dst_mod);
+    if (ret != 0) {
+        PRINT("HB_SYS_Bind failed, src:%d pipe:%d chn:%d dst:%d pipe:%d chn:%d\n",
+            src_mod.enModId, src_mod.s32DevId, src_mod.s32ChnId,
+            dst_mod.enModId, dst_mod.s32DevId, dst_mod.s32ChnId);
+        if (src_obj->object == VPP_CAMERA) {
+            ((VPPCamera *)src_obj->pobj)->GetChnId(dst_obj->object, 0, width, height);
+        }
+    }
 
     return Py_BuildValue("i", ret);
 }
 
-static PyObject *Module_unbind(libsppydev_Object *self, PyObject *args, PyObject *kw)
+static PyObject *Module_unbind(libsrcampy_Object *self, PyObject *args, PyObject *kw)
 {
-    int ret = 0;
+    PyObject *src_arg = nullptr, *dst_arg = nullptr;
+    libsrcampy_Object *src_obj = nullptr, *dst_obj = nullptr;
+    struct HB_SYS_MOD_S src_mod, dst_mod;
+    int ret = 0, width = 0, height = 0;
+    static char *kwlist[] = {(char *)"src", (char *)"dst", NULL};
+
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "OO", kwlist, &src_arg, &dst_arg)) {
+        return Py_BuildValue("i", -1);
+    }
+
+    src_obj = (libsrcampy_Object *)src_arg;
+    dst_obj = (libsrcampy_Object *)dst_arg;
+
+    if (dst_obj->object == VPP_ENCODE) {
+        dst_mod.enModId = HB_ID_VENC;
+        dst_mod.s32DevId = ((VPPEncode *)dst_obj->pobj)->m_enc_obj.get()->m_chn;
+        dst_mod.s32ChnId = 0;
+        width = ((VPPEncode *)dst_obj->pobj)->m_enc_obj.get()->m_width;
+        height = ((VPPEncode *)dst_obj->pobj)->m_enc_obj.get()->m_height;
+    } else if (dst_obj->object == VPP_DECODE) {
+        dst_mod.enModId = HB_ID_VDEC;
+        dst_mod.s32DevId = ((VPPDecode *)dst_obj->pobj)->m_dec_obj.get()->m_chn;
+        dst_mod.s32ChnId = 0;
+        width = ((VPPDecode *)dst_obj->pobj)->m_dec_obj.get()->m_width;
+        height = ((VPPDecode *)dst_obj->pobj)->m_dec_obj.get()->m_height;
+    } else if (dst_obj->object == VPP_DISPLAY) {
+        dst_mod.enModId = HB_ID_VOT;
+        dst_mod.s32DevId = 0;
+        dst_mod.s32ChnId = ((VPPDisplay *)dst_obj->pobj)->get_video_chn();
+        width = ((VPPDisplay *)dst_obj->pobj)->m_chn_width[dst_mod.s32ChnId];
+        height = ((VPPDisplay *)dst_obj->pobj)->m_chn_height[dst_mod.s32ChnId];
+    } else if (dst_obj->object == VPP_CAMERA) {
+        dst_mod.enModId = HB_ID_VPS;
+        dst_mod.s32DevId = 0;
+        dst_mod.s32ChnId = 0;
+    } else {
+        PRINT("bind error dst object:%d\n", dst_obj->object);
+        return Py_BuildValue("i", -1);
+    }
+    if (src_obj->object == VPP_CAMERA) {
+        src_mod.enModId = HB_ID_VPS;
+        src_mod.s32DevId = ((VPPCamera *)src_obj->pobj)->GetPipeId();
+        src_mod.s32ChnId = ((VPPCamera *)src_obj->pobj)->GetChnId(dst_obj->object, 0, width, height);
+    } else if (src_obj->object == VPP_ENCODE) {
+        src_mod.enModId = HB_ID_VENC;
+        src_mod.s32DevId = ((VPPEncode *)src_obj->pobj)->m_enc_obj.get()->m_chn;
+        src_mod.s32ChnId = 0;
+        width = ((VPPEncode *)src_obj->pobj)->m_enc_obj.get()->m_width;
+        height = ((VPPEncode *)src_obj->pobj)->m_enc_obj.get()->m_height;
+    } else if (src_obj->object == VPP_DECODE) {
+        src_mod.enModId = HB_ID_VDEC;
+        src_mod.s32DevId = ((VPPDecode *)src_obj->pobj)->m_dec_obj.get()->m_chn;
+        src_mod.s32ChnId = 0;
+        width = ((VPPDecode *)src_obj->pobj)->m_dec_obj.get()->m_width;
+        height = ((VPPDecode *)src_obj->pobj)->m_dec_obj.get()->m_height;
+    } else {
+        PRINT("bind error src object:%d\n", src_obj->object);
+        return Py_BuildValue("i", -1);
+    }
+    ret = HB_SYS_UnBind(&src_mod, &dst_mod);
+    if (ret != 0) {
+        PRINT("HB_SYS_Bind failed\n");
+    }
 
     return Py_BuildValue("i", ret);
 }
@@ -762,15 +891,15 @@ static struct PyMethodDef Camera_Methods[] = {
     {"open_cam", (PyCFunction)Camera_open_cam, METH_VARARGS | METH_KEYWORDS, "Open camera and start video stream"},
     {"open_vps", (PyCFunction)Camera_open_vps, METH_VARARGS | METH_KEYWORDS, "Open vps process"},
     {"close_cam", (PyCFunction)Camera_close_cam, METH_NOARGS, "Stop video stream and close camera"},
-    {"get_frame", (PyCFunction)Camera_get_frame, METH_VARARGS | METH_KEYWORDS, "Get image from the channel"},
-    {"set_frame", (PyCFunction)Camera_set_frame, METH_VARARGS | METH_KEYWORDS, "Set image to the vps"},
+    {"get_img", (PyCFunction)Camera_get_img, METH_VARARGS | METH_KEYWORDS, "Get image from the channel"},
+    {"set_img", (PyCFunction)Camera_set_img, METH_VARARGS | METH_KEYWORDS, "Set image to the vps"},
     {nullptr, nullptr, 0, nullptr},
 };
 
-static PyTypeObject libsppydev_CameraType = {
-    PyVarObject_HEAD_INIT(&libsppydev_CameraType, 0) /* ob_size */
-    "libsppydev.Camera",                             /* tp_name */
-    sizeof(libsppydev_Object),                       /* tp_basicsize */
+static PyTypeObject libsrcampy_CameraType = {
+    PyVarObject_HEAD_INIT(&libsrcampy_CameraType, 0) /* ob_size */
+    "libsrcampy.Camera",                             /* tp_name */
+    sizeof(libsrcampy_Object),                       /* tp_basicsize */
     0,                                               /* tp_itemsize */
     (destructor)Camera_dealloc,                      /* tp_dealloc */
     0,                                               /* tp_print */
@@ -811,16 +940,16 @@ static PyTypeObject libsppydev_CameraType = {
 
 static PyMethodDef Encoder_methods[] = {
     {"encode", (PyCFunction)Encoder_encode, METH_VARARGS | METH_KEYWORDS, "Start encoder"},
+    {"encode_file", (PyCFunction)Encoder_encode_file, METH_VARARGS | METH_KEYWORDS, "Start encoder file"},
     {"close", (PyCFunction)Encoder_close, METH_NOARGS, "Closes encoder."},
-    {"send_frame", (PyCFunction)Encoder_send_frame, METH_VARARGS | METH_KEYWORDS, "Send frame to encoder"},
-    {"get_frame", (PyCFunction)Encoder_get_frame, METH_NOARGS, "Get stream from encoder."},
+    {"get_img", (PyCFunction)Encoder_get_img, METH_NOARGS, "Get stream from encoder."},
     {nullptr, nullptr, 0, nullptr},
 };
 
-static PyTypeObject libsppydev_EncoderType = {
-    PyVarObject_HEAD_INIT(&libsppydev_EncoderType, 0) /* ob_size */
-    "libsppydev.Encoder",                             /* tp_name */
-    sizeof(libsppydev_Object),                        /* tp_basicsize */
+static PyTypeObject libsrcampy_EncoderType = {
+    PyVarObject_HEAD_INIT(&libsrcampy_EncoderType, 0) /* ob_size */
+    "libsrcampy.Encoder",                             /* tp_name */
+    sizeof(libsrcampy_Object),                        /* tp_basicsize */
     0,                                                /* tp_itemsize */
     (destructor)Encoder_dealloc,                      /* tp_dealloc */
     0,                                                /* tp_print */
@@ -862,15 +991,15 @@ static PyTypeObject libsppydev_EncoderType = {
 static PyMethodDef Decoder_methods[] = {
     {"decode", (PyCFunction)Decoder_decode, METH_VARARGS | METH_KEYWORDS, "Start decoder"},
     {"close", (PyCFunction)Decoder_close, METH_NOARGS, "Closes decoder."},
-    {"get_frame", (PyCFunction)Decoder_get_frame, METH_NOARGS, "Get image from decoder."},
-    {"send_frame", (PyCFunction)Decoder_send_frame, METH_VARARGS | METH_KEYWORDS, "Set buffer to decoder."},
+    {"get_img", (PyCFunction)Decoder_get_img, METH_NOARGS, "Get image from decoder."},
+    {"set_img", (PyCFunction)Decoder_set_img, METH_VARARGS | METH_KEYWORDS, "Set buffer to decoder."},
     {nullptr, nullptr, 0, nullptr},
 };
 
-static PyTypeObject libsppydev_DecoderType = {
-    PyVarObject_HEAD_INIT(&libsppydev_DecoderType, 0) /* ob_size */
-    "libsppydev.Decoder",                             /* tp_name */
-    sizeof(libsppydev_Object),                        /* tp_basicsize */
+static PyTypeObject libsrcampy_DecoderType = {
+    PyVarObject_HEAD_INIT(&libsrcampy_DecoderType, 0) /* ob_size */
+    "libsrcampy.Decoder",                             /* tp_name */
+    sizeof(libsrcampy_Object),                        /* tp_basicsize */
     0,                                                /* tp_itemsize */
     (destructor)Decoder_dealloc,                      /* tp_dealloc */
     0,                                                /* tp_print */
@@ -918,10 +1047,10 @@ static PyMethodDef Display_methods[] = {
     {nullptr, nullptr, 0, nullptr},
 };
 
-static PyTypeObject libsppydev_DisplayType = {
-    PyVarObject_HEAD_INIT(&libsppydev_DisplayType, 0) /* ob_size */
-    "libsppydev.Display",                             /* tp_name */
-    sizeof(libsppydev_Object),                        /* tp_basicsize */
+static PyTypeObject libsrcampy_DisplayType = {
+    PyVarObject_HEAD_INIT(&libsrcampy_DisplayType, 0) /* ob_size */
+    "libsrcampy.Display",                             /* tp_name */
+    sizeof(libsrcampy_Object),                        /* tp_basicsize */
     0,                                                /* tp_itemsize */
     (destructor)Display_dealloc,                      /* tp_dealloc */
     0,                                                /* tp_print */
@@ -960,59 +1089,59 @@ static PyTypeObject libsppydev_DisplayType = {
     0,                                                /* tp_free */
 };
 
-static PyMethodDef libsppydev_methods[] = {
+static PyMethodDef libsrcampy_methods[] = {
     {"bind", (PyCFunction)Module_bind, METH_VARARGS | METH_KEYWORDS, "Bind two module."},
     {"unbind", (PyCFunction)Module_unbind, METH_VARARGS | METH_KEYWORDS, "Unbind two module."},
     {nullptr, nullptr, 0, nullptr},
 };
 
 /// wrap a module structure
-static struct PyModuleDef libsppydev = {
+static struct PyModuleDef libsrcampy = {
     PyModuleDef_HEAD_INIT,
-    "libsppydev",  /* name of module */
+    "libsrcampy",  /* name of module */
     __g_m_doc_str, /* module documentation, may be nullptr */
     -1,            /* size of per-interpreter state of the module, or -1 if the module keeps state in global variables. */
-    libsppydev_methods,
+    libsrcampy_methods,
 };
 
 /// init the module is a py module
-PyMODINIT_FUNC PyInit_libsppydev(void)
+PyMODINIT_FUNC PyInit_libsrcampy(void)
 {
     PyObject *m;
 
-    m = PyModule_Create(&libsppydev);
+    m = PyModule_Create(&libsrcampy);
 
     PyVarObject ob_base = {1, &PyType_Type, 0};
-    libsppydev_CameraType.ob_base = ob_base;
-    libsppydev_EncoderType.ob_base = ob_base;
-    libsppydev_DecoderType.ob_base = ob_base;
-    libsppydev_DisplayType.ob_base = ob_base;
+    libsrcampy_CameraType.ob_base = ob_base;
+    libsrcampy_EncoderType.ob_base = ob_base;
+    libsrcampy_DecoderType.ob_base = ob_base;
+    libsrcampy_DisplayType.ob_base = ob_base;
 
-    if (PyType_Ready(&libsppydev_CameraType) < 0) {
+    if (PyType_Ready(&libsrcampy_CameraType) < 0) {
         return nullptr;
     }
 
-    if (PyType_Ready(&libsppydev_EncoderType) < 0) {
+    if (PyType_Ready(&libsrcampy_EncoderType) < 0) {
         return nullptr;
     }
 
-    if (PyType_Ready(&libsppydev_DecoderType) < 0) {
+    if (PyType_Ready(&libsrcampy_DecoderType) < 0) {
         return nullptr;
     }
 
-    if (PyType_Ready(&libsppydev_DisplayType) < 0) {
+    if (PyType_Ready(&libsrcampy_DisplayType) < 0) {
         return nullptr;
     }
 
-    Py_INCREF(&libsppydev_CameraType);
-    Py_INCREF(&libsppydev_EncoderType);
-    Py_INCREF(&libsppydev_DecoderType);
-    Py_INCREF(&libsppydev_DisplayType);
+    Py_INCREF(&libsrcampy_CameraType);
+    Py_INCREF(&libsrcampy_EncoderType);
+    Py_INCREF(&libsrcampy_DecoderType);
+    Py_INCREF(&libsrcampy_DisplayType);
 
-    PyModule_AddObject(m, "Camera", (PyObject *)&libsppydev_CameraType);
-    PyModule_AddObject(m, "Encoder", (PyObject *)&libsppydev_EncoderType);
-    PyModule_AddObject(m, "Decoder", (PyObject *)&libsppydev_DecoderType);
-    PyModule_AddObject(m, "Display", (PyObject *)&libsppydev_DisplayType);
+    PyModule_AddObject(m, "Camera", (PyObject *)&libsrcampy_CameraType);
+    PyModule_AddObject(m, "Encoder", (PyObject *)&libsrcampy_EncoderType);
+    PyModule_AddObject(m, "Decoder", (PyObject *)&libsrcampy_DecoderType);
+    PyModule_AddObject(m, "Display", (PyObject *)&libsrcampy_DisplayType);
 
     return m;
 }

@@ -8,12 +8,12 @@ extern "C"
 
     void *sp_init_display_module();
     void sp_release_display_module(void *obj);
-    int sp_start_display(void *obj, int chn, int width, int height);
-    int sp_stop_display(void *obj);
-    int sp_display_set_image(void *obj, char *addr, int size, int chn);
-    int sp_display_draw_rect(void *obj, int x0, int y0, int x1, int y1, int chn, int flush, int color, int line_width);
-    int sp_display_draw_string(void *obj, int x, int y, char *str, int chn, int flush, int color, int line_width);
-    void sp_get_display_resolution(int *width, int *height);
+    int32_t sp_start_display(void *obj, int32_t chn, int32_t width, int32_t height);
+    int32_t sp_stop_display(void *obj);
+    int32_t sp_display_set_image(void *obj, char *addr, int32_t size, int32_t chn);
+    int32_t sp_display_draw_rect(void *obj, int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t chn, int32_t flush, int32_t color, int32_t line_width);
+    int32_t sp_display_draw_string(void *obj, int32_t x, int32_t y, char *str, int32_t chn, int32_t flush, int32_t color, int32_t line_width);
+    void sp_get_display_resolution(int32_t *width, int32_t *height);
 
 #ifdef __cplusplus
 }

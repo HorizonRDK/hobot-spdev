@@ -1,10 +1,3 @@
-/***************************************************************************
- * @COPYRIGHT NOTICE
- * @Copyright 2023 Horizon Robotics, Inc.
- * @All rights reserved.
- * @Date: 2023-03-19 10:29:31
- * @LastEditTime: 2023-03-19 14:29:09
- ***************************************************************************/
 /*
  * Horizon Robotics
  *
@@ -28,21 +21,9 @@
 #include <mutex>
 #include <Python.h>
 
-#include "x3_sdk_wrap.h"
+#include "x3_common.h"
 
 #define __X3_API__ __attribute__((visibility("default")))
-
-#define AUTO_GUARD_MTX_LOCK(mtxlock) \
-    std::lock_guard<std::mutex> __guard_lock__##mtxlock(mtxlock)
-
-#define AUTO_GUARD_RECURSIVE_LOCK(mtxlock) \
-    std::lock_guard<std::recursive_mutex> __guard_lock__##mtxlock(mtxlock)
-
-#define AUTO_UNIQUE_MTX_LOCK(mtxlock) \
-    std::unique_lock<std::mutex> __unique_lock__##mtxlock(mtxlock)
-
-#define AUTO_UNIQUE_RECURSIVE_MTX_LOCK(mtxlock) \
-    std::unique_lock<std::recursive_mutex> __unique_lock__##mtxlock(mtxlock)
 
 #define EN_DBG 0
 
@@ -69,8 +50,8 @@ typedef struct {
     PyObject_HEAD;
     void *pobj;
     ImageFrame *pframe;
-    SrPy_Object_e object;
-} libsppydev_Object;
+    Sdk_Object_e object;
+} libsrcampy_Object;
 
 #ifdef __cplusplus
 }

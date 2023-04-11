@@ -4,7 +4,7 @@
  # Copyright 2023 Horizon Robotics, Inc.
  # All rights reserved.
  # @Date: 2023-03-05 11:20:19
- # @LastEditTime: 2023-03-19 14:09:30
+ # @LastEditTime: 2023-04-11 15:35:36
 ### 
 
 usage() {
@@ -14,7 +14,6 @@ usage() {
 
 [ -z "${SYSROOT_DIR}" ] &&  export SYSROOT_DIR="$(realpath ../../deploy)/rootfs"
 [ -z "${BUILD_OUTPUT_PATH}" ] && export BUILD_OUTPUT_PATH="$(pwd)"
-[ -z "${SRC_DIR}" ] && export SRC_DIR=$(realpath $(cd $(dirname $0); pwd))
 
 #set -x
 SCRIPTS_DIR=$(cd $(dirname $0) && pwd)
@@ -94,15 +93,15 @@ function cmake_build() {
   # make whl
   cd ${BUILD_DIR}
   cp -arf ${ALL_PROJECT_DIR}/python ${BUILD_DIR}
-  cp -arf ${BUILD_DIR}/src/libhbspdev.so ${BUILD_DIR}/python/hobot_sppy/
-  cp -arf ${BUILD_DIR}/src/libsppydev.so ${BUILD_DIR}/python/hobot_sppy/
+  cp -arf ${BUILD_DIR}/src/libhbspdev.so ${BUILD_DIR}/python/hobot_vio/
+  cp -arf ${BUILD_DIR}/src/libsrcampy.so ${BUILD_DIR}/python/hobot_vio/
   cd ${BUILD_DIR}/python
   python3 setup.py bdist_wheel
 
   cp ${BUILD_DIR}/python/dist/*.whl ${OUTPUT_DIR}
 
   mkdir -p ${OUTPUT_DIR}/include
-  cp ${SRC_DIR}/src/clang/*.h ${OUTPUT_DIR}/include
+  cp ${SCRIPTS_DIR}/src/clang/*.h ${OUTPUT_DIR}/include
 
   cd ${ALL_PROJECT_DIR}
 }

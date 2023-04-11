@@ -1,10 +1,3 @@
-/***************************************************************************
- * @COPYRIGHT NOTICE
- * @Copyright 2023 Horizon Robotics, Inc.
- * @All rights reserved.
- * @Date: 2023-03-05 16:55:13
- * @LastEditTime: 2023-03-05 16:56:44
- ***************************************************************************/
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -14,31 +7,32 @@
 #include <string.h>
 
 #include "x3_sdk_camera.h"
+
 #include "sp_vio.h"
 
 using namespace srpy_cam;
 
 void *sp_init_vio_module()
 {
-    return new SrPyCamera();
+    return new VPPCamera();
 }
 
 void sp_release_vio_module(void *obj)
 {
     if (obj != NULL)
     {
-        auto sp = static_cast<SrPyCamera *>(obj);
+        auto sp = static_cast<VPPCamera *>(obj);
         delete sp; // safe
     }
 }
 
-int sp_open_camera(void *obj, const int pipe_id, int chn_num, int *input_width, int *input_height)
+int32_t sp_open_camera(void *obj, const int32_t pipe_id, const int32_t video_index, int32_t chn_num, int32_t *input_width, int32_t *input_height)
 {
     if (obj != NULL)
     {
-        auto sp = static_cast<SrPyCamera *>(obj);
-        int width[CAMERA_CHN_NUM] = {0};
-        int height[CAMERA_CHN_NUM] = {0};
+        auto sp = static_cast<VPPCamera *>(obj);
+        int32_t width[CAMERA_CHN_NUM] = {0};
+        int32_t height[CAMERA_CHN_NUM] = {0};
         memcpy(width, input_width, sizeof(int) * chn_num);
         memcpy(height, input_height, sizeof(int) * chn_num);
         if (chn_num < (CAMERA_CHN_NUM - 1))
@@ -48,36 +42,36 @@ int sp_open_camera(void *obj, const int pipe_id, int chn_num, int *input_width, 
             height[chn_num] = 0;
             chn_num++;
         }
-        return sp->OpenCamera(pipe_id, 1, 30, chn_num, width, height);
+        return sp->OpenCamera(pipe_id, video_index, 30, chn_num, width, height);
     }
     return -1;
 }
 
-int sp_open_vps(void *obj, const int pipe_id, int chn_num, int proc_mode, int src_width, int src_height, int *dst_width, int *dst_height, int *crop_x, int *crop_y, int *crop_width, int *crop_height, int *rotate)
+int32_t sp_open_vps(void *obj, const int32_t pipe_id, int32_t chn_num, int32_t proc_mode, int32_t src_width, int32_t src_height, int32_t *dst_width, int32_t *dst_height, int32_t *crop_x, int32_t *crop_y, int32_t *crop_width, int32_t *crop_height, int32_t *rotate)
 {
     if (obj != NULL)
     {
-        auto sp = static_cast<SrPyCamera *>(obj);
+        auto sp = static_cast<VPPCamera *>(obj);
         return sp->OpenVPS(pipe_id, chn_num, proc_mode, src_width, src_height, dst_width, dst_height, crop_x, crop_y, crop_width, crop_height, rotate);
     }
     return -1;
 }
 
-int sp_vio_close(void *obj)
+int32_t sp_vio_close(void *obj)
 {
     if (obj != NULL)
     {
-        auto sp = static_cast<SrPyCamera *>(obj);
+        auto sp = static_cast<VPPCamera *>(obj);
         return sp->CloseCamera();
     }
     return -1;
 }
 
-int sp_vio_get_frame(void *obj, char *frame_buffer, int width, int height, const int timeout)
+int32_t sp_vio_get_frame(void *obj, char *frame_buffer, int32_t width, int32_t height, const int32_t timeout)
 {
     if (obj != NULL && frame_buffer != NULL)
     {
-        auto sp = static_cast<SrPyCamera *>(obj);
+        auto sp = static_cast<VPPCamera *>(obj);
         auto module_enum = static_cast<DevModule>(SP_DEV_IPU);
         ImageFrame *temp_ptr = new ImageFrame;
         if (!sp->GetImageFrame(temp_ptr, module_enum, width, height, timeout))
@@ -98,11 +92,11 @@ int sp_vio_get_frame(void *obj, char *frame_buffer, int width, int height, const
     return -1;
 }
 
-int sp_vio_get_raw(void *obj, char *frame_buffer, int width, int height, const int timeout)
+int32_t sp_vio_get_raw(void *obj, char *frame_buffer, int32_t width, int32_t height, const int32_t timeout)
 {
     if (obj != NULL && frame_buffer != NULL)
     {
-        auto sp = static_cast<SrPyCamera *>(obj);
+        auto sp = static_cast<VPPCamera *>(obj);
         auto module_enum = static_cast<DevModule>(Dev_SIF);
         ImageFrame *temp_ptr = new ImageFrame;
         if (!sp->GetImageFrame(temp_ptr, module_enum, width, height, timeout))
@@ -123,11 +117,11 @@ int sp_vio_get_raw(void *obj, char *frame_buffer, int width, int height, const i
     return -1;
 }
 
-int sp_vio_get_yuv(void *obj, char *frame_buffer, int width, int height, const int timeout)
+int32_t sp_vio_get_yuv(void *obj, char *frame_buffer, int32_t width, int32_t height, const int32_t timeout)
 {
     if (obj != NULL && frame_buffer != NULL)
     {
-        auto sp = static_cast<SrPyCamera *>(obj);
+        auto sp = static_cast<VPPCamera *>(obj);
         auto module_enum = static_cast<DevModule>(Dev_ISP);
         ImageFrame *temp_ptr = new ImageFrame;
         if (!sp->GetImageFrame(temp_ptr, module_enum, width, height, timeout))
@@ -148,11 +142,11 @@ int sp_vio_get_yuv(void *obj, char *frame_buffer, int width, int height, const i
     return -1;
 }
 
-int sp_vio_set_frame(void *obj, void *frame_buffer, int size)
+int32_t sp_vio_set_frame(void *obj, void *frame_buffer, int32_t size)
 {
     if (obj != NULL && frame_buffer != NULL)
     {
-        auto sp = static_cast<SrPyCamera *>(obj);
+        auto sp = static_cast<VPPCamera *>(obj);
         auto module_enum = static_cast<DevModule>(SP_DEV_IPU);
         ImageFrame temp_image;
         temp_image.data[0] = static_cast<uint8_t *>(frame_buffer);

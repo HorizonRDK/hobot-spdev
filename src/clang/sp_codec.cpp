@@ -1,82 +1,65 @@
-/***************************************************************************
- * @COPYRIGHT NOTICE
- * @Copyright 2023 Horizon Robotics, Inc.
- * @All rights reserved.
- * @Date: 2023-03-05 16:58:38
- * @LastEditTime: 2023-03-05 17:01:08
- ***************************************************************************/
 #include <thread>
 #include <sys/stat.h>
-#include <thread>
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <time.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
-#include <string.h>
-
-#include "x3_sdk_codec.h"
-
-#include "sp_codec.h"
-
 using namespace std;
 
+#include "x3_sdk_codec.h"
+#include "sp_codec.h"
+
 using namespace srpy_cam;
+
 void *sp_init_encoder_module()
 {
-    return new SrPyEncode();
+    return new VPPEncode();
 }
 
 void sp_release_encoder_module(void *obj)
 {
     if (obj != NULL)
     {
-        delete static_cast<SrPyEncode *>(obj);
+        delete static_cast<VPPEncode *>(obj);
         obj = NULL;
     }
 }
 
-int sp_start_encode(void *obj, int chn, int type, int width, int height, int bits)
+int32_t sp_start_encode(void *obj, int32_t chn, int32_t type, int32_t width, int32_t height, int32_t bits)
 {
     if (obj != NULL)
     {
-        auto encoder_obj = static_cast<SrPyEncode *>(obj);
+        auto encoder_obj = static_cast<VPPEncode *>(obj);
         return encoder_obj->do_encoding(chn, type, width, height, bits);
     }
     return -1;
 }
 
-int sp_stop_encode(void *obj)
+int32_t sp_stop_encode(void *obj)
 {
     if (obj != NULL)
     {
-        auto encoder_obj = static_cast<SrPyEncode *>(obj);
+        auto encoder_obj = static_cast<VPPEncode *>(obj);
         return encoder_obj->undo_encoding();
     }
     return -1;
 }
 
-int sp_set_frame(void *obj, char *frame_buffer, int32_t size)
+int32_t sp_encoder_set_frame(void *obj, char *frame_buffer, int32_t size)
 {
     if (obj != NULL)
     {
-        auto encoder_obj = static_cast<SrPyEncode *>(obj);
-        return encoder_obj->send_frame(frame_buffer, size);
+        auto encoder_obj = static_cast<VPPEncode *>(obj);
+        return encoder_obj->encode_file(frame_buffer, size);
     }
     return -1;
 }
-
-int sp_encoder_get_stream(void *obj, char *stream_buffer)
+int32_t sp_encoder_get_stream(void *obj, char *stream_buffer)
 {
     if (obj != NULL)
     {
-        auto encoder_obj = static_cast<SrPyEncode *>(obj);
+        auto encoder_obj = static_cast<VPPEncode *>(obj);
         auto frame_obj = encoder_obj->get_frame();
         if (frame_obj)
         {
             //printf("get frame success!,data addr:0x%x,size:%d\n", frame_obj->data[0], frame_obj->data_size[0]);
-            int frame_size = frame_obj->data_size[0];
+            int32_t frame_size = frame_obj->data_size[0];
             memcpy(stream_buffer, frame_obj->data[0], frame_size);
             encoder_obj->put_frame(frame_obj);
             return frame_size;
@@ -88,21 +71,21 @@ int sp_encoder_get_stream(void *obj, char *stream_buffer)
 // decoder
 void *sp_init_decoder_module()
 {
-    return new SrPyDecode();
+    return new VPPDecode();
 }
 
 void sp_release_decoder_module(void *decoder_object)
 {
     if (decoder_object != NULL)
     {
-        delete static_cast<SrPyDecode *>(decoder_object);
+        delete static_cast<VPPDecode *>(decoder_object);
         decoder_object = NULL;
     }
 }
 
-int sp_start_decode(void *decoder_object, const char *stream_file, int video_chn, int type, int width, int height)
+int32_t sp_start_decode(void *decoder_object, const char *stream_file, int32_t video_chn, int32_t type, int32_t width, int32_t height)
 {
-    int frame_rate = 0;
+    int32_t frame_rate = 0;
     if (decoder_object != NULL)
     {
         if (strlen(stream_file) > 0) {
@@ -112,17 +95,17 @@ int sp_start_decode(void *decoder_object, const char *stream_file, int video_chn
                 return -1;
             }
         }
-        auto decoder_obj = static_cast<SrPyDecode *>(decoder_object);
+        auto decoder_obj = static_cast<VPPDecode *>(decoder_object);
         return decoder_obj->do_decoding(stream_file, video_chn, type, width, height, &frame_rate, 1);
     }
     return -1;
 }
 
-int sp_decoder_get_image(void *decoder_object, char *image_buffer)
+int32_t sp_decoder_get_image(void *decoder_object, char *image_buffer)
 {
     if (decoder_object != NULL && image_buffer != NULL)
     {
-        auto decoder_obj = static_cast<SrPyDecode *>(decoder_object);
+        auto decoder_obj = static_cast<VPPDecode *>(decoder_object);
         auto frame = decoder_obj->get_frame();
         if (frame)
         {
@@ -134,21 +117,21 @@ int sp_decoder_get_image(void *decoder_object, char *image_buffer)
     return -1;
 }
 
-int sp_decoder_set_image(void *decoder_object, char *image_buffer, int chn, int size, int eos)
+int32_t sp_decoder_set_image(void *decoder_object, char *image_buffer, int32_t chn, int32_t size, int32_t eos)
 {
     if (decoder_object != NULL && image_buffer != NULL)
     {
-        auto decoder_obj = static_cast<SrPyDecode *>(decoder_object);
+        auto decoder_obj = static_cast<VPPDecode *>(decoder_object);
         return decoder_obj->send_frame(chn, image_buffer, size, eos);
     }
     return 0;
 }
 
-int sp_stop_decode(void *decoder_object)
+int32_t sp_stop_decode(void *decoder_object)
 {
     if (decoder_object != NULL)
     {
-        auto decoder_obj = static_cast<SrPyDecode *>(decoder_object);
+        auto decoder_obj = static_cast<VPPDecode *>(decoder_object);
         return decoder_obj->undo_decoding();
     }
     return -1;

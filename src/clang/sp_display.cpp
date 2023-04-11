@@ -1,69 +1,63 @@
 #include <thread>
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <time.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
-#include <string.h>
+using namespace std;
 
+#include "x3_sdk_codec.h"
 #include "x3_sdk_display.h"
-
+#include "x3_sdk_camera.h"
 #include "sp_display.h"
 
-using namespace std;
 using namespace srpy_cam;
 
 
 void *sp_init_display_module()
 {
-    return new SrPyDisplay(); 
+    return new VPPDisplay(); 
 }
 
 void sp_release_display_module(void *obj)
 {
     if (obj != NULL)
     {
-        delete static_cast<SrPyDisplay *>(obj);
+        delete static_cast<VPPDisplay *>(obj);
     }
 }
 
-int sp_start_display(void *obj, int chn, int width, int height)
+int32_t sp_start_display(void *obj, int32_t chn, int32_t width, int32_t height)
 {
     if (obj != NULL)
-        return static_cast<SrPyDisplay *>(obj)->x3_vot_init(chn, width, height, 0, 0, width, height);
+        return static_cast<VPPDisplay *>(obj)->x3_vot_init(chn, width, height, VOT_OUTPUT_1920x1080, HB_VOT_OUTPUT_BT1120, width, height);
     return -1;
 }
 
-int sp_stop_display(void *obj)
+int32_t sp_stop_display(void *obj)
 {
     if (obj != NULL)
-        return static_cast<SrPyDisplay *>(obj)->x3_vot_deinit();
+        return static_cast<VPPDisplay *>(obj)->x3_vot_deinit();
     return -1;
 }
 
-int sp_display_set_image(void *obj, char *addr, int size, int chn)
+int32_t sp_display_set_image(void *obj, char *addr, int32_t size, int32_t chn)
 {
     if (obj != NULL)
-        return static_cast<SrPyDisplay *>(obj)->set_img(addr, size, chn);
+        return static_cast<VPPDisplay *>(obj)->set_img(addr, size, chn);
     return -1;
 }
 
-int sp_display_draw_rect(void *obj, int x0, int y0, int x1, int y1, int chn, int flush, int color, int line_width)
+int32_t sp_display_draw_rect(void *obj, int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t chn, int32_t flush, int32_t color, int32_t line_width)
 {
     if (obj != NULL)
-        return static_cast<SrPyDisplay *>(obj)->set_graph_rect(x0, y0, x1, y1, chn, flush, color, line_width);
+        return static_cast<VPPDisplay *>(obj)->set_graph_rect(x0, y0, x1, y1, chn, flush, color, line_width);
     return -1;
 }
 
-int sp_display_draw_string(void *obj, int x, int y, char *str, int chn, int flush, int color, int line_width)
+int32_t sp_display_draw_string(void *obj, int32_t x, int32_t y, char *str, int32_t chn, int32_t flush, int32_t color, int32_t line_width)
 {
     if (obj != NULL)
-        return static_cast<SrPyDisplay *>(obj)->set_graph_word(x, y, str, chn, flush, (uint32_t)color, line_width);
+        return static_cast<VPPDisplay *>(obj)->set_graph_word(x, y, str, chn, flush, (uint32_t)color, line_width);
     return -1;
 }
 
-static int exec_cmd_ex(const char *cmd, char* res, int max)
+static int32_t exec_cmd_ex(const char *cmd, char* res, int32_t max)
 {
     if(cmd == NULL || res == NULL || max <= 0)
             return -1; 
@@ -74,7 +68,7 @@ static int exec_cmd_ex(const char *cmd, char* res, int max)
         return -1; 
     }
 
-    int length;
+    int32_t length;
     char tmp[1024] = {0};
 
     length = max;
@@ -89,7 +83,7 @@ static int exec_cmd_ex(const char *cmd, char* res, int max)
     return strlen(res);
 }
 
-void sp_get_display_resolution(int *width, int *height)
+void sp_get_display_resolution(int32_t *width, int32_t *height)
 {
     char result[128], buff[8];
     char *split = NULL;

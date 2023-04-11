@@ -1,3 +1,10 @@
+'''
+COPYRIGHT NOTICE
+Copyright 2023 Horizon Robotics, Inc.
+All rights reserved.
+Date: 2023-04-11 15:50:01
+LastEditTime: 2023-04-11 15:50:02
+'''
 import os
 import sys
 import subprocess
@@ -18,14 +25,14 @@ classifiers = ['Operating System :: POSIX :: Linux',
                'Topic :: System :: Hardware']
 
 setup(
-    name="hobot_sppy",
+    name="hobot_vio",
     version="2.0.0",
-    author="Horizon Robotics",
+    author="horizon",
     author_email="technical_support@horizon.ai",
-    description="hobot multimedia python interface",
+    description="VIO of python API",
     classifiers = classifiers,
     package_dir = {'': './'},
-    packages = ['hobot_sppy'],
-    package_data = {'hobot_sppy': ['libhbspdev.so','libsppydev.so']},
+    packages = ['hobot_vio'],
+    package_data = {'hobot_vio': ['libhbspdev.so', 'libsrcampy.so',]},
     include_package_data = True,
 )

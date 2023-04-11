@@ -50,7 +50,7 @@ int exec_cmd_ex(const char *cmd, char *res, int max)
         length = 1024;
 
     while (fgets(tmp, length, pp) != NULL) {
-        sscanf(tmp, "%s", res);
+        strcat(res, tmp);
     }
 
     pclose(pp);

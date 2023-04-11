@@ -1,7 +1,7 @@
 #!/bin/bash
 
 pip3 install /usr/lib/hobot_spdev/hobot_dnn*.whl
-pip3 install /usr/lib/hobot_spdev/hobot_sppy*.whl
+pip3 install /usr/lib/hobot_spdev/hobot_vio*.whl
 
 ldconfig
 

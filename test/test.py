@@ -1,12 +1,9 @@
-#!/usr/bin/env python3
-
 import sys, os, time
-sys.path.append('/usr/lib/hobot-spdev')
+sys.path.append('/usr/lib/hobot-srcampy')
 
 import numpy as np
 import cv2
-# import libhbspdev
-from hobot_spdev import libhbspdev
+import libsrcampy
 
 def get_nalu_pos(byte_stream):
     size = byte_stream.__len__()
@@ -57,15 +54,15 @@ def get_h264_nalu_type(byte_stream):
     return nalu_types
 
 def test_camera():
-    cam = libhbspdev.Camera()
-    ret = cam.open_cam(0, 0, 30, [1920, 1280], [1080, 720])
+    cam = libsrcampy.Camera()
+    ret = pcam.open_cam(0, 0, 30, 1920, 1080)
     print("Camera open_cam return:%d" % ret)
     # wait for isp tuning
-    time.sleep(3)
-    img = cam.get_frame(2)
+    time.sleep(1)
+    img = cam.get_img(2)
     if img is not None:
         #save file
-        fo = open("output.yuv", "wb")
+        fo = open("output.img", "wb")
         fo.write(img)
         fo.close()
         print("camera save img file success")
@@ -76,7 +73,7 @@ def test_camera():
 
 def test_camera_vps():
     #vps start
-    vps = libhbspdev.Camera()
+    vps = libsrcampy.Camera()
     ret = vps.open_vps(1, 1, 1920, 1080, 512, 512)
     print("Camera vps return:%d" % ret)
 
@@ -100,7 +97,7 @@ def test_camera_vps():
 
 def test_encode():
     #encode file
-    enc = libhbspdev.Encoder()
+    enc = libsrcampy.Encoder()
     ret = enc.encode(0, 1, 1920, 1080)
     print("Encoder encode return:%d" % ret)
 
@@ -111,9 +108,9 @@ def test_encode():
     input_img = fin.read()
     fin.close()
     while a < 100:
-        ret = enc.send_frame(input_img)
-        print("Encoder send_frame return:%d" % ret)
-        img = enc.get_frame()
+        ret = enc.encode_file(input_img)
+        print("Encoder encode_file return:%d" % ret)
+        img = enc.get_img()
         if img is not None:
             fo.write(img)
             print("encode write image success count: %d" % a)
@@ -126,17 +123,12 @@ def test_encode():
 
 def test_decode():
     #decode start
-    dec = libhbspdev.Decoder()
+    dec = libsrcampy.Decoder()
 
     ret = dec.decode("encode.h264", 0, 1, 1920, 1080)
     print ("Decoder return:%d frame count: %d" %(ret[0], ret[1]))
 
-    # time.sleep(1000000)
-    while True:
-        img = dec.get_frame()
-        time.sleep(1)
-
-
+    img = dec.get_img()
     if img is not None:
         #save file
         fo = open("output.img", "wb")
@@ -146,13 +138,11 @@ def test_decode():
     else:
         print("decode save img file failed")
 
-    time.sleep(1000000)
-
     dec.close()
     print("test_decode done!!!")
 
 def test_display():
-    disp = libhbspdev.Display()
+    disp = libsrcampy.Display()
     ret = disp.display(0, 1920, 1080, 0, 1)
     print ("Display display 0 return:%d" % ret)
     ret = disp.display(2)
@@ -174,97 +164,24 @@ def test_display():
     disp.close()
     print("test_display done!!!")
 
-def test_camera_to_display():
-    #camera start
-    cam = libhbspdev.Camera()
-    ret = cam.open_cam(0, 0, 30, 1920, 1080)
-    print("Camera open_cam return:%d" % ret)
-
-    #display start
-    disp = libhbspdev.Display()
-    ret = disp.display(0, 1920, 1080, 0, 1, chn_width = 1920, chn_height = 1080)
-    print ("Display display 0 return:%d" % ret)
-    # ret = disp.display(2, chn_width = 1280, chn_height = 720)
-    # print ("Display display 2 return:%d" % ret)
-    disp.set_graph_rect(100, 100, 1920, 200, chn = 2, flush = 1,  color = 0xffff00ff)
-    string = "horizon"
-    disp.set_graph_word(300, 300, string.encode('gb2312'), 2, 0, 0xff00ffff)
-    # ret = libhbspdev.bind(cam, disp)
-    # print("libhbspdev bind return:%d" % ret)
-    a = 0
-    while True:
-        img = cam.get_frame(2)
-        ret = disp.set_img(img)
-        a += 1
-
-    time.sleep(10)
-
-    # ret = libhbspdev.unbind(cam, disp)
-    # print("libhbspdev unbind return:%d" % ret)
-    disp.close()
-    cam.close_cam()
-    print("test_camera_bind_display done!!!")
-
-
-def test_camera_to_encode():
-    #camera start
-    cam = libhbspdev.Camera()
-    ret = cam.open_cam(0, 0, 30, [1920, 1280], [1080, 720])
-    print("Camera open_cam return:%d" % ret)
-
-    #encode start
-    enc = libhbspdev.Encoder()
-    ret = enc.encode(0, 1, 1920, 1080)
-    print("Encoder encode return:%d" % ret)
-
-    enc1 = libhbspdev.Encoder()
-    ret = enc1.encode(1, 1, 1920, 1080)
-    print("Encoder encode return:%d" % ret)
-
-    #save file
-    fo = open("encode.h264", "wb+")
-    fo1 = open("encode1.h264", "wb+")
-    a = 0
-    while a < 300:
-        img = cam.get_frame(2)
-        enc.send_frame(img)
-        enc1.send_frame(img)
-
-        img = enc.get_frame()
-        img1 = enc1.get_frame()
-        if img is not None:
-            fo.write(img)
-            fo1.write(img1)
-            print("encode write image success count: %d" % a)
-        else:
-            print("encode write image failed count: %d" % a)
-        a = a + 1
-    fo.close()
-    fo1.close()
-
-    enc1.close()
-    enc.close()
-    cam.close_cam()
-    print("test_camera_bind_encode done!!!")
-
 def test_camera_bind_encode():
     #camera start
-    cam = libhbspdev.Camera()
-    ret = cam.open_cam(0, 1, 30, [1920, 1280], [1080, 720])
+    cam = libsrcampy.Camera()
+    ret = pcam.open_cam(0, 0, 30, [1920, 1280], [1080, 720])
     print("Camera open_cam return:%d" % ret)
 
     #encode start
-    enc = libhbspdev.Encoder()
+    enc = libsrcampy.Encoder()
     ret = enc.encode(0, 1, 1920, 1080)
     print("Encoder encode return:%d" % ret)
-    ret = libhbspdev.bind(cam, enc)
-    print("libhbspdev bind return:%d" % ret)
+    ret = libsrcampy.bind(cam, enc)
+    print("libsrcampy bind return:%d" % ret)
 
-    enc1 = libhbspdev.Encoder()
+    enc1 = libsrcampy.Encoder()
     ret = enc1.encode(1, 1, 1280, 720)
     print("Encoder encode return:%d" % ret)
-    ret = libhbspdev.bind(cam, enc1)
-    print("libhbspdev bind return:%d" % ret)
+    ret = libsrcampy.bind(cam, enc1)
+    print("libsrcampy bind return:%d" % ret)
 
     #save file
     fo = open("encode.h264", "wb+")
@@ -284,10 +201,10 @@ def test_camera_bind_encode():
     fo1.close()
 
     print("save encode file success")
-    ret = libhbspdev.unbind(cam, enc)
-    print("libhbspdev unbind return:%d" % ret)
-    ret = libhbspdev.unbind(cam, enc1)
-    print("libhbspdev unbind return:%d" % ret)
+    ret = libsrcampy.unbind(cam, enc)
+    print("libsrcampy unbind return:%d" % ret)
+    ret = libsrcampy.unbind(cam, enc1)
+    print("libsrcampy unbind return:%d" % ret)
 
     enc1.close()
     enc.close()
@@ -296,42 +213,42 @@ def test_camera_bind_encode():
 
 def test_camera_bind_display():
     #camera start
-    cam = libhbspdev.Camera()
-    ret = cam.open_cam(0, 1, 30, 1920, 1080)
+    cam = libsrcampy.Camera()
+    ret = pcam.open_cam(0, 0, 30, 1280, 720)
     print("Camera open_cam return:%d" % ret)
 
     #display start
-    disp = libhbspdev.Display()
-    ret = disp.display(0, 1920, 1080, 0, 1, chn_width = 1920, chn_height = 1080)
+    disp = libsrcampy.Display()
+    ret = disp.display(0, 1920, 1080, 0, 1, chn_width = 1280, chn_height = 720)
     print ("Display display 0 return:%d" % ret)
-    # ret = disp.display(2, chn_width = 1280, chn_height = 720)
-    # print ("Display display 2 return:%d" % ret)
+    ret = disp.display(2, chn_width = 1280, chn_height = 720)
+    print ("Display display 2 return:%d" % ret)
     disp.set_graph_rect(100, 100, 1920, 200, chn = 2, flush = 1,  color = 0xffff00ff)
     string = "horizon"
     disp.set_graph_word(300, 300, string.encode('gb2312'), 2, 0, 0xff00ffff)
-    ret = libhbspdev.bind(cam, disp)
-    print("libhbspdev bind return:%d" % ret)
+    ret = libsrcampy.bind(cam, disp)
+    print("libsrcampy bind return:%d" % ret)
 
     time.sleep(10)
 
-    ret = libhbspdev.unbind(cam, disp)
-    print("libhbspdev unbind return:%d" % ret)
+    ret = libsrcampy.unbind(cam, disp)
+    print("libsrcampy unbind return:%d" % ret)
     disp.close()
     cam.close_cam()
     print("test_camera_bind_display done!!!")
 
 def test_decode_bind_display():
     #decode start
-    dec = libhbspdev.Decoder()
+    dec = libsrcampy.Decoder()
     ret = dec.decode("encode.h264", 0, 1, 1920, 1080)
     print ("Decoder return:%d frame count: %d" %(ret[0], ret[1]))
 
-    dec1 = libhbspdev.Decoder()
+    dec1 = libsrcampy.Decoder()
     ret = dec1.decode("encode1.h264", 1, 1, 1280, 720)
     print ("Decoder return:%d frame count: %d" %(ret[0], ret[1]))
 
     #display start
-    disp = libhbspdev.Display()
+    disp = libsrcampy.Display()
     ret = disp.display(0, 1920, 1080, 0, 1)
     print ("Display display 0 return:%d" % ret)
     ret = disp.display(2)
@@ -339,13 +256,13 @@ def test_decode_bind_display():
     disp.set_graph_rect(100, 100, 1920, 200, chn = 2, flush = 1,  color = 0xffff00ff)
     string = "horizon"
     disp.set_graph_word(300, 300, string.encode('gb2312'), 2, 0, 0xff00ffff)
-    ret = libhbspdev.bind(dec, disp)
-    print("libhbspdev bind return:%d" % ret)
+    ret = libsrcampy.bind(dec, disp)
+    print("libsrcampy bind return:%d" % ret)
 
     time.sleep(5)
 
-    ret = libhbspdev.unbind(dec, disp)
-    print("libhbspdev unbind return:%d" % ret)
+    ret = libsrcampy.unbind(dec, disp)
+    print("libsrcampy unbind return:%d" % ret)
     disp.close()
     dec1.close()
     dec.close()
@@ -353,29 +270,29 @@ def test_decode_bind_display():
 
 def test_cam_bind_encode_decode_bind_display():
     #camera start
-    cam = libhbspdev.Camera()
-    ret = cam.open_cam(0, 1, 30, [1920, 1280], [1080, 720])
+    cam = libsrcampy.Camera()
+    ret = pcam.open_cam(0, 0, 30, [1920, 1280], [1080, 720])
     print("Camera open_cam return:%d" % ret)
 
     #encode file
-    enc = libhbspdev.Encoder()
+    enc = libsrcampy.Encoder()
     ret = enc.encode(0, 1, 1920, 1080)
     print("Encoder encode return:%d" % ret)
 
     #decode start
-    dec = libhbspdev.Decoder()
+    dec = libsrcampy.Decoder()
     ret = dec.decode("", 0, 1, 1920, 1080)
     print ("Decoder return:%d frame count: %d" %(ret[0], ret[1]))
 
     #display start
-    disp = libhbspdev.Display()
+    disp = libsrcampy.Display()
     ret = disp.display(0, 1920, 1080, 0, 1)
     print ("Display display 0 return:%d" % ret)
 
-    ret = libhbspdev.bind(cam, enc)
-    print("libhbspdev bind return:%d" % ret)
-    ret = libhbspdev.bind(dec, disp)
-    print("libhbspdev bind return:%d" % ret)
+    ret = libsrcampy.bind(cam, enc)
+    print("libsrcampy bind return:%d" % ret)
+    ret = libsrcampy.bind(dec, disp)
+    print("libsrcampy bind return:%d" % ret)
 
     a = 0
     while a < 100:
@@ -387,8 +304,8 @@ def test_cam_bind_encode_decode_bind_display():
             print("encode get image failed count: %d" % a)
         a = a + 1
 
-    ret = libhbspdev.unbind(cam, enc)
-    ret = libhbspdev.unbind(dec, disp)
+    ret = libsrcampy.unbind(cam, enc)
+    ret = libsrcampy.unbind(dec, disp)
     disp.close()
     dec.close()
     enc.close()
@@ -397,17 +314,17 @@ def test_cam_bind_encode_decode_bind_display():
 
 def test_cam_vps_display():
     #camera start
-    cam = libhbspdev.Camera()
-    ret = cam.open_cam(0, 1, 30, [1920, 1280], [1080, 720])
+    cam = libsrcampy.Camera()
+    ret = pcam.open_cam(0, 0, 30, [1920, 1280], [1080, 720])
     print("Camera open_cam return:%d" % ret)
 
     #vps start
-    vps = libhbspdev.Camera()
+    vps = libsrcampy.Camera()
     ret = vps.open_vps(1, 1, 1920, 1080, 512, 512)
     print("Camera vps return:%d" % ret)
 
     #display start
-    disp = libhbspdev.Display()
+    disp = libsrcampy.Display()
     ret = disp.display(0, 1920, 1080, 0, 1)
     print ("Display display 0 return:%d" % ret)
 
@@ -446,24 +363,24 @@ def test_rtsp_decode_bind_vps_bind_disp(rtsp_url):
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
     #decode start
-    dec = libhbspdev.Decoder()
+    dec = libsrcampy.Decoder()
     ret = dec.decode("", 0, 1, width, height)
     print ("Decoder return:%d frame count: %d" %(ret[0], ret[1]))
 
     #camera start
-    vps = libhbspdev.Camera()
+    vps = libsrcampy.Camera()
     ret = vps.open_vps(0, 1, width, height, [1920, 512], [1080, 512])
     print("Camera open_cam return:%d" % ret)
 
     #display start
-    disp = libhbspdev.Display()
+    disp = libsrcampy.Display()
     ret = disp.display(0, 1920, 1080, 0, 1)
     print ("Display display 0 return:%d" % ret)
 
-    ret = libhbspdev.bind(dec, vps)
-    print("libhbspdev bind return:%d" % ret)
-    ret = libhbspdev.bind(vps, disp)
-    print("libhbspdev bind return:%d" % ret)
+    ret = libsrcampy.bind(dec, vps)
+    print("libsrcampy bind return:%d" % ret)
+    ret = libsrcampy.bind(vps, disp)
+    print("libsrcampy bind return:%d" % ret)
 
     a = 0
     while a < 500:
@@ -484,8 +401,8 @@ def test_rtsp_decode_bind_vps_bind_disp(rtsp_url):
                 print("decode set image failed")
             a = a + 1
 
-    ret = libhbspdev.unbind(dec, vps)
-    ret = libhbspdev.unbind(vps, disp)
+    ret = libsrcampy.unbind(dec, vps)
+    ret = libsrcampy.unbind(vps, disp)
     disp.close()
     dec.close()
     vps.close_cam()
@@ -493,18 +410,16 @@ def test_rtsp_decode_bind_vps_bind_disp(rtsp_url):
     print("test_rtsp_decode_bind_vps_bind_disp done!!!")
 
 
-# test_camera()
-# test_camera_vps()
-# test_encode()
-# test_decode()
-# test_display()
-# test_camera_to_display()
-test_camera_to_encode()
-# test_camera_bind_encode()
-# test_camera_bind_display()
-# test_decode_bind_display()
-# test_cam_bind_encode_decode_bind_display()
-# test_cam_vps_display()
+test_camera()
+test_camera_vps()
+test_encode()
+test_decode()
+test_display()
+test_camera_bind_encode()
+test_camera_bind_display()
+test_decode_bind_display()
+test_cam_bind_encode_decode_bind_display()
+test_cam_vps_display()
 
 # rtsp_url = "rtsp://127.0.0.1/3840x2160.264"
 # test_rtsp_decode_bind_vps_bind_disp(rtsp_url)

@@ -8,8 +8,8 @@
 extern "C"
 {
 #endif
-int sp_module_bind(void *src, int src_type, void *dst, int dst_type);
-int sp_module_unbind(void *src, int src_type, void *dst, int dst_type);
+int32_t sp_module_bind(void *src, int32_t src_type, void *dst, int32_t dst_type);
+int32_t sp_module_unbind(void *src, int32_t src_type, void *dst, int32_t dst_type);
 #ifdef __cplusplus
 }
 #endif /* End of #ifdef __cplusplus */
