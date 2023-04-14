@@ -88,7 +88,7 @@ void sp_get_display_resolution(int32_t *width, int32_t *height)
     char result[128], buff[8];
     char *split = NULL;
     memset(result, '\0', sizeof(result));
-    exec_cmd_ex("8618_get_edid", result, 1024);
+    exec_cmd_ex("get_hdmi_res", result, 1024);
 
     split = strchr(result, ',');
     if (split == NULL) {
