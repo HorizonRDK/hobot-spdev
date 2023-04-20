@@ -21,7 +21,7 @@ file(GLOB HBSPDEV_SRC
 set(SOURCE_FILES ${HBSPDEV_SRC} ${HBSPDEV_INC})
 add_library(${HBSPDEV_NAME} SHARED ${SOURCE_FILES})
 
-target_link_libraries(${HBSPDEV_NAME} ${BASE_LIBRARIES} ${HB_SDK_LIB})
+target_link_libraries(${HBSPDEV_NAME} ${HB_SDK_LIB} ${BASE_LIBRARIES})
 
 # make libsrcampy.so
 set(SRCAMPY_NAME srcampy)
@@ -38,7 +38,7 @@ file(GLOB SRCAMPY_SRC
 set(SOURCE_FILES ${SRCAMPY_SRC} ${SRCAMPY_INC})
 add_library(${SRCAMPY_NAME} SHARED ${SOURCE_FILES})
 
-target_link_libraries(${SRCAMPY_NAME} ${BASE_LIBRARIES} ${HB_SDK_LIB} ${HBSPDEV_NAME})
+target_link_libraries(${SRCAMPY_NAME} ${HBSPDEV_NAME})
 
 # make libspcdev.so
 set(SPCDEV_NAME spcdev)
@@ -54,7 +54,7 @@ file(GLOB SPCDEV_SRC
 set(SOURCE_FILES ${SPCDEV_SRC} ${SPCDEV_INC})
 add_library(${SPCDEV_NAME} SHARED ${SOURCE_FILES})
 
-target_link_libraries(${SPCDEV_NAME} ${BASE_LIBRARIES} ${HB_SDK_LIB} dnn ${HBSPDEV_NAME})
+target_link_libraries(${SPCDEV_NAME} dnn ${HBSPDEV_NAME} )
 
 install(TARGETS ${HBSPDEV_NAME} DESTINATION ${MY_OUTPUT_ROOT})
 install(TARGETS ${SRCAMPY_NAME} DESTINATION ${MY_OUTPUT_ROOT})

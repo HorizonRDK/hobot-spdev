@@ -89,7 +89,7 @@ int x3_cam_init_param(x3_modules_info_t *info, const int pipe_id, const int vide
         {
             LOGE_print("read fail\n");
             fclose(stream);
-            return NULL;
+            return -1;
         }
         fclose(stream);
  

@@ -49,16 +49,14 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/include/isp
     ${CMAKE_CURRENT_SOURCE_DIR}/include/hbusb
     ${CMAKE_CURRENT_SOURCE_DIR}/hobot-dnn/usr/include
-    $ENV{SYSROOT_DIR}/usr/include/aarch64-linux-gnu
 )
 
 link_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/lib
   ${CMAKE_CURRENT_SOURCE_DIR}/lib/hbbpu
   ${CMAKE_CURRENT_SOURCE_DIR}/lib/hbmedia
+  ${CMAKE_CURRENT_SOURCE_DIR}/lib/aarch64-linux-gnu
   ${CMAKE_CURRENT_SOURCE_DIR}/hobot-dnn/usr/lib/hbbpu
-  $ENV{SYSROOT_DIR}/usr/lib/aarch64-linux-gnu
-  $ENV{SYSROOT_DIR}/usr/lib/python3.8/config-3.8-aarch64-linux-gnu/
 )
 
 set(CMAKE_SKIP_BUILD_RPATH FALSE)

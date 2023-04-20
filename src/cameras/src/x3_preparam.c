@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include <cJSON.h>
 #include "utils_log.h"
 
 #include "sensor_f37_config.h"
@@ -38,6 +39,13 @@ typedef struct sensor_id {
     char sensor_name[10];
     int (*sensor_vin_param)(x3_vin_info_t *vin_info);
 } sensor_id_t;
+
+#define MAX_CAMERAS 3
+typedef struct {
+    int enable;
+    int i2c_bus;
+    int mipi_host;
+} board_camera_info_t;
 
 #define I2C_ADDR_8  1
 #define I2C_ADDR_16 2
@@ -223,7 +231,141 @@ int vps_chn_rotate_param_init(x3_vps_chn_attr_t *vps_chn_attr, int rotate)
     return 0;
 }
 
-static sensor_id_t *check_sensor(sensor_id_t *sensos_list, int length)
+static cJSON *open_json_file(const char *path)
+{
+    FILE *fp = fopen(path, "r");
+    int32_t ret = 0;
+    if (fp == NULL)
+    {
+        perror("fopen");
+        return NULL;
+    }
+
+    fseek(fp, 0, SEEK_END);
+    long fsize = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+
+    char *buf = malloc(fsize + 1);
+    ret = fread(buf, fsize, 1, fp);
+    if (ret != 1)
+    {
+        LOGE_print("Error fread size:%d\n", ret);
+    }
+    fclose(fp);
+
+    buf[fsize] = '\0';
+
+    cJSON *root = cJSON_Parse(buf);
+    if (root == NULL)
+    {
+        const char *error_ptr = cJSON_GetErrorPtr();
+        if (error_ptr != NULL)
+        {
+            LOGE_print("Error cJSON_Parse: %s\n", error_ptr);
+        }
+        free(buf);
+        return NULL;
+    }
+    free(buf);
+
+    return root;
+}
+
+static int parse_cameras(cJSON *cameras, board_camera_info_t camera_info[])
+{
+    cJSON *camera = NULL;
+    int ret;
+
+    for (int i = 0; i < MAX_CAMERAS; i++) {
+        camera_info[i].enable = 0;
+
+        camera = cJSON_GetArrayItem(cameras, i);
+        if (camera == NULL) {
+            break;
+        }
+
+        // parse reset
+        cJSON *reset = cJSON_GetObjectItem(camera, "reset");
+        if (reset == NULL) {
+            ret = -1;
+            goto exit;
+        }
+
+        int gpio_num = atoi(strtok(reset->valuestring, ":"));
+        char *active = strtok(NULL, ":");
+
+        // parse i2c_bus
+        cJSON *i2c_bus_obj = cJSON_GetObjectItem(camera, "i2c_bus");
+        if (i2c_bus_obj == NULL) {
+            ret = -1;
+            goto exit;
+        }
+        camera_info[i].i2c_bus = i2c_bus_obj->valueint;
+
+        // parse mipi_host
+        cJSON *mipi_host_obj = cJSON_GetObjectItem(camera, "mipi_host");
+        if (mipi_host_obj == NULL) {
+            ret = -1;
+            goto exit;
+        }
+        camera_info[i].mipi_host = mipi_host_obj->valueint;
+        camera_info[i].enable = 1;
+
+        printf("Camera: gpio_num=%d, active=%s, i2c_bus=%d, mipi_host=%d\n",
+            gpio_num, active, i2c_bus_obj->valueint, mipi_host_obj->valueint);
+    }
+    ret = 0;
+
+exit:
+    return ret;
+}
+
+static int parse_config(const char *json_file, board_camera_info_t camera_info[])
+{
+    int ret = 0;
+    cJSON *root = NULL;
+    cJSON *board_config = NULL;
+    cJSON *cameras = NULL;
+    char som_name[16];
+    char board_name[32];
+
+    FILE *fp = fopen("/sys/class/socinfo/som_name", "r");
+    if (fp == NULL) {
+        return -1 ;
+    }
+    fscanf(fp, "%s", som_name);
+    fclose(fp);
+
+    snprintf(board_name, sizeof(board_name), "board_%s", som_name);
+
+    root = open_json_file(json_file);
+    if (!root) {
+        fprintf(stderr, "Failed to parse JSON string.\n");
+        return -1 ;
+    }
+
+    board_config = cJSON_GetObjectItem(root, board_name);
+    if (!board_config) {
+        fprintf(stderr, "Failed to get board_config object.\n");
+        ret = -1;
+        goto exit;
+    }
+
+    cameras = cJSON_GetObjectItem(board_config, "cameras");
+    if (!cameras) {
+        fprintf(stderr, "Failed to get cameras array.\n");
+        ret = -1;
+        goto exit;
+    }
+
+    ret = parse_cameras(cameras, camera_info);
+
+exit:
+    cJSON_Delete(root);
+    return ret;
+}
+
+static sensor_id_t *check_sensor(const int i2c_bus, sensor_id_t *sensos_list, int length)
 {
     int i = 0;
     char cmd[128] = {0};
@@ -234,18 +376,19 @@ static sensor_id_t *check_sensor(sensor_id_t *sensos_list, int length)
         memset(cmd, '\0', sizeof(cmd));
         memset(result, '\0', sizeof(result));
         if (sensos_list[i].i2c_addr_width == I2C_ADDR_8) {
-            sprintf(cmd, "i2ctransfer -y -f %d w1@0x%x 0x%x r1 2>&1", sensos_list[i].i2c_bus,
+            sprintf(cmd, "i2ctransfer -y -f %d w1@0x%x 0x%x r1 2>&1", i2c_bus,
                     sensos_list[i].i2c_dev_addr, sensos_list[i].det_reg);
         } else if (sensos_list[i].i2c_addr_width == I2C_ADDR_16) {
-            sprintf(cmd, "i2ctransfer -y -f %d w2@0x%x 0x%x 0x%x r1 2>&1", sensos_list[i].i2c_bus,
+            sprintf(cmd, "i2ctransfer -y -f %d w2@0x%x 0x%x 0x%x r1 2>&1", i2c_bus,
                     sensos_list[i].i2c_dev_addr,
                     sensos_list[i].det_reg >> 8, sensos_list[i].det_reg & 0xFF);
         } else {
             continue;
         }
         exec_cmd_ex(cmd, result, 1024);
-        if (strstr(result, "Error") == NULL) { // 返回结果中不带Error, 说明sensor找到了
-            // printf("match sensor:%s\n", sensos_list[i].sensor_name);
+        if (strstr(result, "Error") == NULL && strstr(result, "error") == NULL) { // 返回结果中不带Error, 说明sensor找到了
+            printf("cmd=%s, result=%s\n", cmd, result);
+            sensos_list[i].i2c_bus = i2c_bus;
             return &sensos_list[i];
         }
     }
@@ -254,31 +397,72 @@ static sensor_id_t *check_sensor(sensor_id_t *sensos_list, int length)
 }
 
 static sensor_id_t s_sensor_id_list[] = {
-    {1, 0x40, I2C_ADDR_8, 0x0B, "f37", f37_linear_vin_param_init},                // F37
-    {2, 0x40, I2C_ADDR_8, 0x0B, "f37", f37_linear_vin_param_init},                // F37
-    {1, 0x29, I2C_ADDR_16, 0x03f0, "gc4663", gc4663_linear_vin_param_init},       // GC4663
-    {2, 0x29, I2C_ADDR_16, 0x03f0, "gc4663", gc4663_linear_vin_param_init},       // GC4663
     {1, 0x36, I2C_ADDR_16, 0x300A, "ov5647", ov5647_linear_vin_param_init}, // ov5647 for x3-pi
     {1, 0x10, I2C_ADDR_16, 0x0000, "imx219", imx219_linear_vin_param_init}, // imx219 for x3-pi
     {1, 0x1a, I2C_ADDR_16, 0x0200, "imx477", imx477_linear_vin_param_init}, // imx477 for x3-pi
-    {3, 0x36, I2C_ADDR_16, 0x300A, "ov5647", ov5647_linear_vin_param_init}, // ov5647 for x3-cm
-    {3, 0x10, I2C_ADDR_16, 0x0000, "imx219", imx219_linear_vin_param_init}, // imx219 for x3-cm
-    {3, 0x1a, I2C_ADDR_16, 0x0200, "imx477", imx477_linear_vin_param_init}, // imx477 for x3-cm
-
+    {1, 0x40, I2C_ADDR_8, 0x0B, "f37", f37_linear_vin_param_init},          // F37
+    {1, 0x29, I2C_ADDR_16, 0x03f0, "gc4663", gc4663_linear_vin_param_init}, // GC4663
 };
 
-
-int vin_param_init(const int video_index, x3_vin_info_t *vin_info)
+int vin_param_init(const int cam_idx, x3_vin_info_t *vin_info)
 {
+    int ret = 0;
     sensor_id_t *sensor_id;
+    board_camera_info_t camera_info[MAX_CAMERAS];
+    int i2c_bus = -1;
+    int mipi_host = -1;
 
-    sensor_id = check_sensor(s_sensor_id_list, ARRAY_SIZE(s_sensor_id_list));
-    if (sensor_id == NULL)
+    memset(camera_info, 0, sizeof(camera_info));
+    ret = parse_config("/etc/board_config.json", camera_info);
+    if (ret != 0) {
+        printf("Failed to parse cameras\n");
         return -1;
+    }
+
+    for (int i = 0; i < MAX_CAMERAS; i++) {
+        printf("Camera %d:\n", i);
+        printf("\tenable: %d\n", camera_info[i].enable);
+        printf("\ti2c_bus: %d\n", camera_info[i].i2c_bus);
+        printf("\tmipi_host: %d\n", camera_info[i].mipi_host);
+    }
+
+    if (cam_idx >= 0 && cam_idx < MAX_CAMERAS) {
+        i2c_bus = camera_info[cam_idx].i2c_bus;
+        mipi_host = camera_info[cam_idx].mipi_host;
+        if (camera_info[cam_idx].enable)
+            sensor_id = check_sensor(i2c_bus, s_sensor_id_list, ARRAY_SIZE(s_sensor_id_list));
+    } else if (cam_idx == -1) {
+        for (int i = 0; i < MAX_CAMERAS; i++) {
+            if (!camera_info[cam_idx].enable)
+                continue;
+            i2c_bus = camera_info[i].i2c_bus;
+            mipi_host = camera_info[i].mipi_host;
+            sensor_id = check_sensor(i2c_bus, s_sensor_id_list, ARRAY_SIZE(s_sensor_id_list));
+            if (sensor_id != NULL)
+                break;
+        }
+    } else {
+        printf("The parameter video_idx=%d is not supported. Please set it to one of [-1, 0, 1, 2].\n",
+            cam_idx);
+        return -1;
+    }
+
+    if (sensor_id == NULL) {
+        printf("No camera sensor found, please check whether the camera connection or video_idx is correct.\n");
+        return -1;
+    }
+
     sensor_id->sensor_vin_param(vin_info);
     vin_info->isp_enable = 1;
-    vin_info->snsinfo.sensorInfo.bus_num = sensor_id->i2c_bus;
-    vin_info->snsinfo.sensorInfo.entry_index = video_index;
+    vin_info->snsinfo.sensorInfo.bus_num = i2c_bus;
+    vin_info->snsinfo.sensorInfo.entry_index = mipi_host;
+
+    printf("Found sensor:%s on i2c bus %d, use mipi host %d\n",
+        sensor_id->sensor_name, i2c_bus, mipi_host);
+
+    if (mipi_host == 0) {
+        exec_cmd("echo 1 > /sys/class/vps/mipi_host0/param/stop_check_instart");
+    }
 
     return 0;
 }
