@@ -377,7 +377,7 @@ int VPPCodec::x3_av_open_stream(x3_codec_param_t *p_param,
         LOGE_print("avformat_find_stream_info failed\n");
         return -1;
     }
-    LOGE_print("probesize: %ld\n", (*p_avContext)->probesize);
+    LOGI_print("probesize: %ld\n", (*p_avContext)->probesize);
 
     /* dump input information to stderr */
     // av_dump_format(*p_avContext, 0, p_param->fname, 0);
