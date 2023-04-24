@@ -462,6 +462,10 @@ int vin_param_init(const int cam_idx, x3_vin_info_t *vin_info)
 
     if (mipi_host == 0) {
         exec_cmd("echo 1 > /sys/class/vps/mipi_host0/param/stop_check_instart");
+    } else if (mipi_host == 1) {
+        exec_cmd("echo 1 > /sys/class/vps/mipi_host1/param/stop_check_instart");
+    } else if (mipi_host == 2) {
+        exec_cmd("echo 1 > /sys/class/vps/mipi_host2/param/stop_check_instart");
     }
 
     return 0;
