@@ -488,17 +488,20 @@ int VPPDisplay::x3_vot_init(int chn = 0, int width = 1920, int height = 1080,
         goto err2;
     }
 
-    buffer_ = (char *)malloc(image_data_size_);
-    memset(buffer_, 0x1b, chn_width * chn_height);
-    for (uint32_t i = chn_width * chn_height; i < image_data_size_; i+=2) {
-        buffer_[i] = 0x80;
-        buffer_[i+1] = 0x80;
-    }
+    if (m_vot_chn[chn] < 2)
+    {
+        buffer_ = (char *)malloc(image_data_size_);
+        memset(buffer_, 0x1b, chn_width * chn_height);
+        for (uint32_t i = chn_width * chn_height; i < image_data_size_; i+=2) {
+            buffer_[i] = 0x80;
+            buffer_[i+1] = 0x80;
+        }
 
-    static VOT_FRAME_INFO_S stFrame;
-    stFrame.addr = buffer_;
-    stFrame.size = image_data_size_;
-    HB_VOT_SendFrame(0, m_vot_chn[chn], &stFrame, -1);
+        static VOT_FRAME_INFO_S stFrame;
+        stFrame.addr = buffer_;
+        stFrame.size = image_data_size_;
+        HB_VOT_SendFrame(0, m_vot_chn[chn], &stFrame, -1);
+    }
 
     upscale_attr.upscale_en = 0;
     upscale_attr.pos_x = 0;
