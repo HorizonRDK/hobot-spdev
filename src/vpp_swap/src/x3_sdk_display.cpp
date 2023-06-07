@@ -329,7 +329,7 @@ static void vot_set_upscale_attr(VOT_UPSCALE_ATTR_S *upscale_attr, int width, in
 }
 
 int VPPDisplay::x3_vot_init(int chn = 0, int width = 1920, int height = 1080,
-            int vot_intf = VOT_OUTPUT_1920x1080, int vot_out_mode = HB_VOT_OUTPUT_BT1120,
+            int vot_intf = VOT_OUTPUT_1080P30, int vot_out_mode = HB_VOT_OUTPUT_BT1120,
             int chn_width = 1920, int chn_height = 1080)
 {
     int ret = 0;
