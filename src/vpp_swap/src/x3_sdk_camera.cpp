@@ -26,9 +26,9 @@ namespace srpy_cam
 
 static int vps_select_chn(int *chn_en, int src_width, int src_height, int dst_width, int dst_height)
 {
-    if (((dst_width <= src_width) || (dst_height <= src_height)) &&
+    if (((dst_width <= src_width) && (dst_height <= src_height)) &&
         (!(*chn_en & 1 << HB_VIO_IPU_DS2_DATA)) &&
-        (dst_width <= 3840 && dst_height <= 2160)) {
+        (dst_width <= 4096 && dst_height <= 4096)) {
         return HB_VIO_IPU_DS2_DATA;
     }
     if ((dst_width <= src_width) || (dst_height <= src_height)) {
@@ -46,9 +46,9 @@ static int vps_select_chn(int *chn_en, int src_width, int src_height, int dst_wi
             return HB_VIO_IPU_DS4_DATA;
         }
     }
-    if (((dst_width >= src_width) || (dst_height > src_height)) &&
+    if (((dst_width >= src_width) && (dst_height >= src_height)) &&
             (!(*chn_en & 1 << HB_VIO_IPU_US_DATA)) &&
-            (dst_width <= 3840 && dst_height <= 2160)) {
+            (dst_width <= 4096 && dst_height <= 4096)) {
         return HB_VIO_IPU_US_DATA;
     }
 
@@ -132,6 +132,12 @@ int x3_cam_init_param(x3_modules_info_t *info, const int pipe_id, const int vide
     // 2.3 配置group每个通道的参数
     info->m_vps_infos.m_vps_info[0].m_chn_num = chn_num;
     for (int i = 0; i < chn_num; i++) {
+        if((width[i] % 4 != 0) || (height[i] % 2 != 0))
+        {
+            LOGE_print("Width: %d must be divisible by 4, height: %d must be even!\n",width[i],height[i]);
+            ret = -1;
+            break;
+        }
         chn_data = -1;
         if ((width[i] == 0) && (height[i] == 0)) {//如果高宽为0，那么就开一个和mipi原始高宽一致的通道
             width[i] = mipi_width;
