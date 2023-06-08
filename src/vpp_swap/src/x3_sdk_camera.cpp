@@ -28,7 +28,7 @@ static int vps_select_chn(int *chn_en, int src_width, int src_height, int dst_wi
 {
     if (((dst_width <= src_width) || (dst_height <= src_height)) &&
         (!(*chn_en & 1 << HB_VIO_IPU_DS2_DATA)) &&
-        (dst_width <= 3840 && dst_height <= 2160)) {
+        (dst_width <= 4096 && dst_height <= 4096)) {
         return HB_VIO_IPU_DS2_DATA;
     }
     if ((dst_width <= src_width) || (dst_height <= src_height)) {
@@ -48,7 +48,7 @@ static int vps_select_chn(int *chn_en, int src_width, int src_height, int dst_wi
     }
     if (((dst_width >= src_width) || (dst_height > src_height)) &&
             (!(*chn_en & 1 << HB_VIO_IPU_US_DATA)) &&
-            (dst_width <= 3840 && dst_height <= 2160)) {
+            (dst_width <= 4096 && dst_height <= 4096)) {
         return HB_VIO_IPU_US_DATA;
     }
 
