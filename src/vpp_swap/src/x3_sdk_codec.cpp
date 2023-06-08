@@ -615,6 +615,7 @@ int VPPCodec::x3_venc_file(char *addr, int32_t size)
     }
 
     if (size != m_enc_param->vp_param->mmz_size) {
+        LOGE_print("mmz_size:%d\n",m_enc_param->vp_param->mmz_size);
         LOGE_print("Invalid image size:%d!\n", size);
         goto err_vp_alloc;
     }

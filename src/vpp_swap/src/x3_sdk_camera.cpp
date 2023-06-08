@@ -26,7 +26,7 @@ namespace srpy_cam
 
 static int vps_select_chn(int *chn_en, int src_width, int src_height, int dst_width, int dst_height)
 {
-    if (((dst_width == src_width) || (dst_height == src_height)) &&
+    if (((dst_width <= src_width) || (dst_height <= src_height)) &&
         (!(*chn_en & 1 << HB_VIO_IPU_DS2_DATA)) &&
         (dst_width <= 3840 && dst_height <= 2160)) {
         return HB_VIO_IPU_DS2_DATA;
@@ -56,7 +56,7 @@ static int vps_select_chn(int *chn_en, int src_width, int src_height, int dst_wi
 }
 
 int x3_cam_init_param(x3_modules_info_t *info, const int pipe_id, const int video_index, int fps,
-                int chn_num, int *width, int *height)
+                int chn_num,x3_sensors_parameters *parameters, int *width, int *height)
 {
     int i = 0;
     int ret = 0;
@@ -105,6 +105,7 @@ int x3_cam_init_param(x3_modules_info_t *info, const int pipe_id, const int vide
     // 1.1 通过默认参数配置vin参数
     info->m_vin_info.dev_id = pipe_id;
     info->m_vin_info.pipe_id = pipe_id;
+    info->m_vin_info.parameters = parameters;
     ret = vin_param_init(video_index, &info->m_vin_info);
     if (ret) {
         LOGE_print("vin_param_init failed, %d", ret);
@@ -132,7 +133,7 @@ int x3_cam_init_param(x3_modules_info_t *info, const int pipe_id, const int vide
     info->m_vps_infos.m_vps_info[0].m_chn_num = chn_num;
     for (int i = 0; i < chn_num; i++) {
         chn_data = -1;
-        if ((width[i] == 0) && (height[i] == 0)) {
+        if ((width[i] == 0) && (height[i] == 0)) {//如果高宽为0，那么就开一个和mipi原始高宽一致的通道
             width[i] = mipi_width;
             height[i] = mipi_height;
         }
@@ -377,11 +378,11 @@ int x3_cam_vp_deinit(vp_param_t *vp_param)
 }
 
 int VPPCamera::OpenCamera(const int pipe_id, const int video_index, int fps,
-                    int chn_num, int *width, int *height)
+          int chn_num,x3_sensors_parameters *parameters, int *width, int *height)
 {
     int ret = 0;
 
-    ret = x3_cam_init_param(&m_x3_modules_info, pipe_id, video_index, fps, chn_num, width, height);
+    ret = x3_cam_init_param(&m_x3_modules_info, pipe_id, video_index, fps, chn_num, parameters, width, height);
     if (ret)
         return -1;
     ret = x3_cam_init(&m_x3_modules_info);
@@ -496,6 +497,7 @@ static int GetSifRawData(const int pipe_id, ImageFrame *image_frame, const int t
             sif_img = nullptr;
             return -1;
         }
+        printf("data_size:%d,width:%d,height:%d,stride:%d\n",data_size,sif_img->img_addr.width,sif_img->img_addr.height,sif_img->img_addr.stride_size);
         image_frame->data[0] = (uint8_t *)sif_img->img_addr.addr[0];
         image_frame->data_size[0] = data_size;
         image_frame->plane_count = sif_img->img_info.planeCount;
@@ -584,7 +586,7 @@ static int GetISPYuvData(const int pipe_id, ImageFrame *image_frame, const int t
         image_frame->data_size[1] = isp_yuv->img_info.size[1];
         image_frame->plane_count = isp_yuv->img_info.planeCount;
         image_frame->frame_info = static_cast<void *>(isp_yuv);
-
+        printf("data_size:%d,width:%d,height:%d,stride:%d\n",data_size,isp_yuv->img_addr.width,isp_yuv->img_addr.height,isp_yuv->img_addr.stride_size);
         image_frame->image_id = isp_yuv->img_info.frame_id & 0xFFFF; // 低16位是帧id
         image_frame->image_timestamp = isp_yuv->img_info.tv.tv_sec * 1000 + isp_yuv->img_info.tv.tv_usec / 1000;
         image_frame->exp_time = isp_yuv->img_info.frame_id >> 29; // 高3位是左右激光管状态;

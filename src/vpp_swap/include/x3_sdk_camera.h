@@ -63,6 +63,21 @@ class VPPCamera
           int chn_num, int *width, int *height);
 
     /**
+     * @brief 指定原始分辨率并打开摄像头，适用于有多种分辨率的摄像头
+     * 
+     * @param pipe_id           视频pipeline id
+     * @param video_index       相机节点
+     * @param fps               帧率
+     * @param chn_num           VPS通道数量
+     * @param parameters        raw图相关参数 参见 x3_sensors_parameters 声明部分
+     * @param width             VPS宽数组
+     * @param height            VPS高数组
+     * @return int 
+     */
+    int OpenCamera(const int pipe_id, const int video_index, int fps,
+          int chn_num,x3_sensors_parameters *parameters, int *width, int *height);
+
+    /**
      * @brief 开启VPS
      * @param [in] pipe_id       视频pipeline id
      * @param [in] proc_mode     vps 处理模式
