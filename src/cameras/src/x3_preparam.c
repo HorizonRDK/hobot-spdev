@@ -55,6 +55,7 @@ int f37_linear_vin_param_init(x3_vin_info_t *vin_info)
 {
     int32_t raw_height = vin_info->parameters->raw_height;
     int32_t raw_width = vin_info->parameters->raw_width;
+    int fps = vin_info->parameters->fps;
     if((raw_height == 1080 && raw_width == 1920) || (raw_height == -1 && raw_width == -1)) 
     {
         vin_info->snsinfo = SENSOR_1LANE_F37_30FPS_10BIT_LINEAR_INFO;
@@ -63,6 +64,9 @@ int f37_linear_vin_param_init(x3_vin_info_t *vin_info)
         vin_info->pipeinfo = PIPE_ATTR_F37_LINEAR_BASE;
         vin_info->disinfo = DIS_ATTR_F37_LINEAR_BASE;
         vin_info->ldcinfo = LDC_ATTR_F37_LINEAR_BASE;
+    } else{
+        LOGE_print("Unsupported resolution,w:%d,h:%d,fps:%d",raw_width,raw_height,fps == -1?30:fps);
+        return -1;
     }
     vin_info->vin_vps_mode = VIN_OFFLINE_VPS_OFFINE;
 
@@ -76,6 +80,7 @@ int gc4663_linear_vin_param_init(x3_vin_info_t* vin_info)
 {
     int32_t raw_height = vin_info->parameters->raw_height;
     int32_t raw_width = vin_info->parameters->raw_width;
+    int fps = vin_info->parameters->fps;
     if((raw_height == 1440 && raw_width == 2560) || (raw_height == -1 && raw_width == -1)) 
     {
         vin_info->snsinfo = SENSOR_2LANE_GC4663_30FPS_10BIT_LINEAR_INFO;
@@ -84,6 +89,9 @@ int gc4663_linear_vin_param_init(x3_vin_info_t* vin_info)
         vin_info->pipeinfo = PIPE_ATTR_GC4663_LINEAR_BASE;
         vin_info->disinfo = DIS_ATTR_GC4663_LINEAR_BASE;
         vin_info->ldcinfo = LDC_ATTR_GC4663_LINEAR_BASE;
+    } else{
+        LOGE_print("Unsupported resolution,w:%d,h:%d,fps:%d",raw_width,raw_height,fps == -1?30:fps);
+        return -1;
     }
 	vin_info->vin_vps_mode = VIN_OFFLINE_VPS_OFFINE;
 
@@ -130,6 +138,7 @@ int ov5647_linear_vin_param_init(x3_vin_info_t *vin_info )
 {
     int32_t raw_height = vin_info->parameters->raw_height;
     int32_t raw_width = vin_info->parameters->raw_width;
+    int fps = vin_info->parameters->fps;
     if((raw_width == 1920 && raw_height == 1080) || (raw_width == -1 && raw_height == -1)){
         vin_info->snsinfo = SENSOR_2LANE_OV5647_30FPS_10BIT_LINEAR_INFO;
         vin_info->mipi_attr = MIPI_2LANE_SENSOR_OV5647_30FPS_10BIT_LINEAR_ATTR;
@@ -158,6 +167,9 @@ int ov5647_linear_vin_param_init(x3_vin_info_t *vin_info )
         vin_info->pipeinfo = PIPE_ATTR_OV5647_30FPS_960P_LINEAR_BASE;
         vin_info->disinfo = DIS_ATTR_OV5647_30FPS_960P_LINEAR_BASE;
         vin_info->ldcinfo = LDC_ATTR_OV5647_30FPS_960P_LINEAR_BASE;
+    } else{
+        LOGE_print("Unsupported resolution,w:%d,h:%d,fps:%d",raw_width,raw_height,fps == -1?30:fps);
+        return -1;
     }
     vin_info->vin_vps_mode = VIN_OFFLINE_VPS_OFFINE;
     vin_info->enable_dev_attr_ex = 0;
@@ -171,6 +183,7 @@ int imx219_linear_vin_param_init(x3_vin_info_t *vin_info)
 {
     int32_t raw_height = vin_info->parameters->raw_height;
     int32_t raw_width = vin_info->parameters->raw_width;
+    int fps = vin_info->parameters->fps;
     if((raw_height == 1080 && raw_width == 1920) || (raw_height == -1 && raw_width == -1)) 
     {
         vin_info->snsinfo = SENSOR_2LANE_IMX219_30FPS_10BIT_LINEAR_INFO;
@@ -200,6 +213,9 @@ int imx219_linear_vin_param_init(x3_vin_info_t *vin_info)
         vin_info->pipeinfo = PIPE_ATTR_IMX219_15FPS_2464P_LINEAR_BASE;
         vin_info->disinfo = DIS_ATTR_IMX219_15FPS_2464P_LINEAR_BASE;
         vin_info->ldcinfo = LDC_ATTR_IMX219_15FPS_2464P_LINEAR_BASE;
+    } else{
+        LOGE_print("Unsupported resolution,w:%d,h:%d,fps:%d",raw_width,raw_height,fps == -1?30:fps);
+        return -1;
     }
     vin_info->vin_vps_mode = VIN_OFFLINE_VPS_OFFINE;//TBD
     vin_info->enable_dev_attr_ex = 0;
@@ -212,6 +228,7 @@ int imx477_linear_vin_param_init(x3_vin_info_t *vin_info)
 {
     int32_t raw_height = vin_info->parameters->raw_height;
     int32_t raw_width = vin_info->parameters->raw_width;
+    int fps = vin_info->parameters->fps;
     if((raw_height == 1080 && raw_width == 1920) || (raw_height == -1 && raw_width == -1)) 
     {
         vin_info->snsinfo = SENSOR_2LANE_IMX477_50FPS_12BIT_LINEAR_INFO;
@@ -241,6 +258,9 @@ int imx477_linear_vin_param_init(x3_vin_info_t *vin_info)
         vin_info->pipeinfo = PIPE_ATTR_IMX477_10FPS_3000P_LINEAR_BASE;
         vin_info->disinfo = DIS_ATTR_IMX477_10FPS_3000P_LINEAR_BASE;
         vin_info->ldcinfo = LDC_ATTR_IMX477_10FPS_3000P_LINEAR_BASE;
+    } else{
+        LOGE_print("Unsupported resolution,w:%d,h:%d,fps:%d",raw_width,raw_height);
+        return -1;
     }
     vin_info->vin_vps_mode = VIN_OFFLINE_VPS_OFFINE;//TBD
     vin_info->enable_dev_attr_ex = 0;
