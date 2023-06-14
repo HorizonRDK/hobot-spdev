@@ -6,12 +6,6 @@
  # @Date: 2023-03-05 11:20:19
  # @LastEditTime: 2023-04-20 09:30:35
 ### 
-export HR_LOCAL_DIR=$(realpath $(cd $(dirname $0); pwd))
-echo $HR_LOCAL_DIR
-# 编译出来的镜像保存位置
-export IMAGE_DEPLOY_DIR=${HR_LOCAL_DIR}/deploy
-export CROSS_COMPILE=/opt/gcc-ubuntu-9.3.0-2020.03-x86_64-aarch64-linux-gnu/bin/aarch64-linux-gnu-
-export LD_LIBRARY_PATH=/opt/gcc-ubuntu-9.3.0-2020.03-x86_64-aarch64-linux-gnu/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
 usage() {
   echo "usage: bash make.sh [x3] [debug|release]"
   exit 1
