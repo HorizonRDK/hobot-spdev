@@ -559,7 +559,9 @@ int vin_param_init(const int cam_idx, x3_vin_info_t *vin_info)
         return -1;
     }
 
-    sensor_id->sensor_vin_param(vin_info);
+    ret = sensor_id->sensor_vin_param(vin_info);
+    if(ret != 0)
+        return -1;
     vin_info->isp_enable = 1;
     vin_info->snsinfo.sensorInfo.bus_num = i2c_bus;
     vin_info->snsinfo.sensorInfo.entry_index = mipi_host;

@@ -503,7 +503,7 @@ static int GetSifRawData(const int pipe_id, ImageFrame *image_frame, const int t
             sif_img = nullptr;
             return -1;
         }
-        printf("data_size:%d,width:%d,height:%d,stride:%d\n",data_size,sif_img->img_addr.width,sif_img->img_addr.height,sif_img->img_addr.stride_size);
+        LOGD_print("data_size:%d,width:%d,height:%d,stride:%d\n",data_size,sif_img->img_addr.width,sif_img->img_addr.height,sif_img->img_addr.stride_size);
         image_frame->data[0] = (uint8_t *)sif_img->img_addr.addr[0];
         image_frame->data_size[0] = data_size;
         image_frame->plane_count = sif_img->img_info.planeCount;
@@ -592,7 +592,7 @@ static int GetISPYuvData(const int pipe_id, ImageFrame *image_frame, const int t
         image_frame->data_size[1] = isp_yuv->img_info.size[1];
         image_frame->plane_count = isp_yuv->img_info.planeCount;
         image_frame->frame_info = static_cast<void *>(isp_yuv);
-        printf("data_size:%d,width:%d,height:%d,stride:%d\n",data_size,isp_yuv->img_addr.width,isp_yuv->img_addr.height,isp_yuv->img_addr.stride_size);
+        LOGD_print("data_size:%d,width:%d,height:%d,stride:%d\n",data_size,isp_yuv->img_addr.width,isp_yuv->img_addr.height,isp_yuv->img_addr.stride_size);
         image_frame->image_id = isp_yuv->img_info.frame_id & 0xFFFF; // 低16位是帧id
         image_frame->image_timestamp = isp_yuv->img_info.tv.tv_sec * 1000 + isp_yuv->img_info.tv.tv_usec / 1000;
         image_frame->exp_time = isp_yuv->img_info.frame_id >> 29; // 高3位是左右激光管状态;
