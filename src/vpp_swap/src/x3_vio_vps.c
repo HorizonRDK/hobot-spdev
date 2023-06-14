@@ -87,7 +87,7 @@ int x3_vps_chn_init(int vps_grp_id, int vps_chn_id, VPS_CHN_ATTR_S *chn_attr)
 {
     /*VPS_CHN_ATTR_S chn_attr;*/
     int ret = 0;
-
+    //print_vps_chn_attr(chn_attr);
     ret = HB_VPS_SetChnAttr(vps_grp_id, vps_chn_id, chn_attr);
     if (ret) {
         LOGE_print("HB_VPS_SetChnAttr error, ret:%d\n", ret);

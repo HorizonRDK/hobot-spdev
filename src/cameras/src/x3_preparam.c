@@ -53,12 +53,21 @@ typedef struct {
 /******************************* F37 方案 **********************************/
 int f37_linear_vin_param_init(x3_vin_info_t *vin_info)
 {
-    vin_info->snsinfo = SENSOR_1LANE_F37_30FPS_10BIT_LINEAR_INFO;
-    vin_info->mipi_attr = MIPI_1LANE_SENSOR_F37_30FPS_10BIT_LINEAR_ATTR;
-    vin_info->devinfo = DEV_ATTR_F37_LINEAR_BASE;
-    vin_info->pipeinfo = PIPE_ATTR_F37_LINEAR_BASE;
-    vin_info->disinfo = DIS_ATTR_F37_LINEAR_BASE;
-    vin_info->ldcinfo = LDC_ATTR_F37_LINEAR_BASE;
+    int32_t raw_height = vin_info->parameters->raw_height;
+    int32_t raw_width = vin_info->parameters->raw_width;
+    int fps = vin_info->parameters->fps;
+    if((raw_height == 1080 && raw_width == 1920) || (raw_height == -1 && raw_width == -1)) 
+    {
+        vin_info->snsinfo = SENSOR_1LANE_F37_30FPS_10BIT_LINEAR_INFO;
+        vin_info->mipi_attr = MIPI_1LANE_SENSOR_F37_30FPS_10BIT_LINEAR_ATTR;
+        vin_info->devinfo = DEV_ATTR_F37_LINEAR_BASE;
+        vin_info->pipeinfo = PIPE_ATTR_F37_LINEAR_BASE;
+        vin_info->disinfo = DIS_ATTR_F37_LINEAR_BASE;
+        vin_info->ldcinfo = LDC_ATTR_F37_LINEAR_BASE;
+    } else{
+        LOGE_print("Unsupported resolution,w:%d,h:%d,fps:%d",raw_width,raw_height,fps == -1?30:fps);
+        return -1;
+    }
     vin_info->vin_vps_mode = VIN_OFFLINE_VPS_OFFINE;
 
     vin_info->enable_dev_attr_ex = 0;
@@ -69,12 +78,21 @@ int f37_linear_vin_param_init(x3_vin_info_t *vin_info)
 /******************************** GC4663 方案 ******************************/
 int gc4663_linear_vin_param_init(x3_vin_info_t* vin_info)
 {
-	vin_info->snsinfo = SENSOR_2LANE_GC4663_30FPS_10BIT_LINEAR_INFO;
-	vin_info->mipi_attr = MIPI_2LANE_SENSOR_GC4663_30FPS_10BIT_LINEAR_ATTR;
-	vin_info->devinfo = DEV_ATTR_GC4663_LINEAR_BASE;
-	vin_info->pipeinfo = PIPE_ATTR_GC4663_LINEAR_BASE;
-	vin_info->disinfo = DIS_ATTR_GC4663_LINEAR_BASE;
-	vin_info->ldcinfo = LDC_ATTR_GC4663_LINEAR_BASE;
+    int32_t raw_height = vin_info->parameters->raw_height;
+    int32_t raw_width = vin_info->parameters->raw_width;
+    int fps = vin_info->parameters->fps;
+    if((raw_height == 1440 && raw_width == 2560) || (raw_height == -1 && raw_width == -1)) 
+    {
+        vin_info->snsinfo = SENSOR_2LANE_GC4663_30FPS_10BIT_LINEAR_INFO;
+        vin_info->mipi_attr = MIPI_2LANE_SENSOR_GC4663_30FPS_10BIT_LINEAR_ATTR;
+        vin_info->devinfo = DEV_ATTR_GC4663_LINEAR_BASE;
+        vin_info->pipeinfo = PIPE_ATTR_GC4663_LINEAR_BASE;
+        vin_info->disinfo = DIS_ATTR_GC4663_LINEAR_BASE;
+        vin_info->ldcinfo = LDC_ATTR_GC4663_LINEAR_BASE;
+    } else{
+        LOGE_print("Unsupported resolution,w:%d,h:%d,fps:%d",raw_width,raw_height,fps == -1?30:fps);
+        return -1;
+    }
 	vin_info->vin_vps_mode = VIN_OFFLINE_VPS_OFFINE;
 
 	vin_info->enable_dev_attr_ex = 0;
@@ -116,15 +134,44 @@ int imx415_linear_vin_param_init(x3_vin_info_t *vin_info)
 }
 
 /******************************** OV5647 ******************************/
-int ov5647_linear_vin_param_init(x3_vin_info_t *vin_info)
+int ov5647_linear_vin_param_init(x3_vin_info_t *vin_info )
 {
-    vin_info->snsinfo = SENSOR_2LANE_OV5647_30FPS_10BIT_LINEAR_INFO;
-    vin_info->mipi_attr = MIPI_2LANE_SENSOR_OV5647_30FPS_10BIT_LINEAR_ATTR;
-    vin_info->devinfo = DEV_ATTR_OV5647_LINEAR_BASE;
-    vin_info->pipeinfo = PIPE_ATTR_OV5647_LINEAR_BASE;
-    vin_info->disinfo = DIS_ATTR_OV5647_LINEAR_BASE;
-    vin_info->ldcinfo = LDC_ATTR_OV5647_LINEAR_BASE;
-    vin_info->vin_vps_mode = VIN_OFFLINE_VPS_OFFINE;//TBD
+    int32_t raw_height = vin_info->parameters->raw_height;
+    int32_t raw_width = vin_info->parameters->raw_width;
+    int fps = vin_info->parameters->fps;
+    if((raw_width == 1920 && raw_height == 1080) || (raw_width == -1 && raw_height == -1)){
+        vin_info->snsinfo = SENSOR_2LANE_OV5647_30FPS_10BIT_LINEAR_INFO;
+        vin_info->mipi_attr = MIPI_2LANE_SENSOR_OV5647_30FPS_10BIT_LINEAR_ATTR;
+        vin_info->devinfo = DEV_ATTR_OV5647_LINEAR_BASE;
+        vin_info->pipeinfo = PIPE_ATTR_OV5647_LINEAR_BASE;
+        vin_info->disinfo = DIS_ATTR_OV5647_LINEAR_BASE;
+        vin_info->ldcinfo = LDC_ATTR_OV5647_LINEAR_BASE;
+    }else if(raw_width == 640 && raw_height == 480){
+        vin_info->snsinfo = SENSOR_2LANE_OV5647_60FPS_480P_10BIT_LINEAR_INFO;
+        vin_info->mipi_attr = MIPI_2LANE_SENSOR_OV5647_60FPS_480P_10BIT_LINEAR_ATTR;
+        vin_info->devinfo = DEV_ATTR_OV5647_60FPS_480P_LINEAR_BASE;
+        vin_info->pipeinfo = PIPE_ATTR_OV5647_60FPS_480P_LINEAR_BASE;
+        vin_info->disinfo = DIS_ATTR_OV5647_60FPS_480P_LINEAR_BASE;
+        vin_info->ldcinfo = LDC_ATTR_OV5647_60FPS_480P_LINEAR_BASE;
+    } else if(raw_width == 2592 && raw_height == 1944){
+        vin_info->snsinfo = SENSOR_2LANE_OV5647_15FPS_1944P_10BIT_LINEAR_INFO;
+        vin_info->mipi_attr = MIPI_2LANE_SENSOR_OV5647_15FPS_1944P_10BIT_LINEAR_ATTR;
+        vin_info->devinfo = DEV_ATTR_OV5647_15FPS_1944P_LINEAR_BASE;
+        vin_info->pipeinfo = PIPE_ATTR_OV5647_15FPS_1944P_LINEAR_BASE;
+        vin_info->disinfo = DIS_ATTR_OV5647_15FPS_1944P_LINEAR_BASE;
+        vin_info->ldcinfo = LDC_ATTR_OV5647_15FPS_1944P_LINEAR_BASE;
+    } else if(raw_width == 1280 && raw_height == 960){
+        vin_info->snsinfo = SENSOR_2LANE_OV5647_30FPS_960P_10BIT_LINEAR_INFO;
+        vin_info->mipi_attr = MIPI_2LANE_SENSOR_OV5647_30FPS_960P_10BIT_LINEAR_ATTR;
+        vin_info->devinfo = DEV_ATTR_OV5647_30FPS_960P_LINEAR_BASE;
+        vin_info->pipeinfo = PIPE_ATTR_OV5647_30FPS_960P_LINEAR_BASE;
+        vin_info->disinfo = DIS_ATTR_OV5647_30FPS_960P_LINEAR_BASE;
+        vin_info->ldcinfo = LDC_ATTR_OV5647_30FPS_960P_LINEAR_BASE;
+    } else{
+        LOGE_print("Unsupported resolution,w:%d,h:%d,fps:%d",raw_width,raw_height,fps == -1?30:fps);
+        return -1;
+    }
+    vin_info->vin_vps_mode = VIN_OFFLINE_VPS_OFFINE;
     vin_info->enable_dev_attr_ex = 0;
     vin_info->snsinfo.sensorInfo.sensor_addr = 0x36;
 
@@ -134,12 +181,42 @@ int ov5647_linear_vin_param_init(x3_vin_info_t *vin_info)
 /******************************** IMX219 ******************************/
 int imx219_linear_vin_param_init(x3_vin_info_t *vin_info)
 {
-    vin_info->snsinfo = SENSOR_2LANE_IMX219_30FPS_10BIT_LINEAR_INFO;
-    vin_info->mipi_attr = MIPI_2LANE_SENSOR_IMX219_30FPS_10BIT_LINEAR_ATTR;
-    vin_info->devinfo = DEV_ATTR_IMX219_LINEAR_BASE;
-    vin_info->pipeinfo = PIPE_ATTR_IMX219_LINEAR_BASE;
-    vin_info->disinfo = DIS_ATTR_IMX219_LINEAR_BASE;
-    vin_info->ldcinfo = LDC_ATTR_IMX219_LINEAR_BASE;
+    int32_t raw_height = vin_info->parameters->raw_height;
+    int32_t raw_width = vin_info->parameters->raw_width;
+    int fps = vin_info->parameters->fps;
+    if((raw_height == 1080 && raw_width == 1920) || (raw_height == -1 && raw_width == -1)) 
+    {
+        vin_info->snsinfo = SENSOR_2LANE_IMX219_30FPS_10BIT_LINEAR_INFO;
+        vin_info->mipi_attr = MIPI_2LANE_SENSOR_IMX219_30FPS_10BIT_LINEAR_ATTR;
+        vin_info->devinfo = DEV_ATTR_IMX219_LINEAR_BASE;
+        vin_info->pipeinfo = PIPE_ATTR_IMX219_LINEAR_BASE;
+        vin_info->disinfo = DIS_ATTR_IMX219_LINEAR_BASE;
+        vin_info->ldcinfo = LDC_ATTR_IMX219_LINEAR_BASE;
+    } else if(raw_height == 480 && raw_width == 640){
+        vin_info->snsinfo = SENSOR_2LANE_IMX219_30FPS_480P_10BIT_LINEAR_INFO;
+        vin_info->mipi_attr = MIPI_2LANE_SENSOR_IMX219_30FPS_480P_10BIT_LINEAR_ATTR;
+        vin_info->devinfo = DEV_ATTR_IMX219_30FPS_480P_LINEAR_BASE;
+        vin_info->pipeinfo = PIPE_ATTR_IMX219_30FPS_480P_LINEAR_BASE;
+        vin_info->disinfo = DIS_ATTR_IMX219_30FPS_480P_LINEAR_BASE;
+        vin_info->ldcinfo = LDC_ATTR_IMX219_30FPS_480P_LINEAR_BASE;
+    } else if(raw_height == 1232 && raw_width == 1632){
+        vin_info->snsinfo = SENSOR_2LANE_IMX219_30FPS_1232P_10BIT_LINEAR_INFO;
+        vin_info->mipi_attr = MIPI_2LANE_SENSOR_IMX219_30FPS_1232P_10BIT_LINEAR_ATTR;
+        vin_info->devinfo = DEV_ATTR_IMX219_30FPS_1232P_LINEAR_BASE;
+        vin_info->pipeinfo = PIPE_ATTR_IMX219_30FPS_1232P_LINEAR_BASE;
+        vin_info->disinfo = DIS_ATTR_IMX219_30FPS_1232P_LINEAR_BASE;
+        vin_info->ldcinfo = LDC_ATTR_IMX219_30FPS_1232P_LINEAR_BASE;
+    } else if(raw_height == 2464 && raw_width == 3264){
+        vin_info->snsinfo = SENSOR_2LANE_IMX219_15FPS_2464P_10BIT_LINEAR_INFO;
+        vin_info->mipi_attr = MIPI_2LANE_SENSOR_IMX219_15FPS_2464P_10BIT_LINEAR_ATTR;
+        vin_info->devinfo = DEV_ATTR_IMX219_15FPS_2464P_LINEAR_BASE;
+        vin_info->pipeinfo = PIPE_ATTR_IMX219_15FPS_2464P_LINEAR_BASE;
+        vin_info->disinfo = DIS_ATTR_IMX219_15FPS_2464P_LINEAR_BASE;
+        vin_info->ldcinfo = LDC_ATTR_IMX219_15FPS_2464P_LINEAR_BASE;
+    } else{
+        LOGE_print("Unsupported resolution,w:%d,h:%d,fps:%d",raw_width,raw_height,fps == -1?30:fps);
+        return -1;
+    }
     vin_info->vin_vps_mode = VIN_OFFLINE_VPS_OFFINE;//TBD
     vin_info->enable_dev_attr_ex = 0;
     vin_info->snsinfo.sensorInfo.sensor_addr = 0x10;
@@ -149,12 +226,42 @@ int imx219_linear_vin_param_init(x3_vin_info_t *vin_info)
 /******************************** IMX477 ******************************/
 int imx477_linear_vin_param_init(x3_vin_info_t *vin_info)
 {
-    vin_info->snsinfo = SENSOR_2LANE_IMX477_50FPS_12BIT_LINEAR_INFO;
-    vin_info->mipi_attr = MIPI_2LANE_SENSOR_IMX477_50FPS_12BIT_LINEAR_ATTR;
-    vin_info->devinfo = DEV_ATTR_IMX477_LINEAR_BASE;
-    vin_info->pipeinfo = PIPE_ATTR_IMX477_LINEAR_BASE;
-    vin_info->disinfo = DIS_ATTR_IMX477_LINEAR_BASE;
-    vin_info->ldcinfo = LDC_ATTR_IMX477_LINEAR_BASE;
+    int32_t raw_height = vin_info->parameters->raw_height;
+    int32_t raw_width = vin_info->parameters->raw_width;
+    int fps = vin_info->parameters->fps;
+    if((raw_height == 1080 && raw_width == 1920) || (raw_height == -1 && raw_width == -1)) 
+    {
+        vin_info->snsinfo = SENSOR_2LANE_IMX477_50FPS_12BIT_LINEAR_INFO;
+        vin_info->mipi_attr = MIPI_2LANE_SENSOR_IMX477_50FPS_12BIT_LINEAR_ATTR;
+        vin_info->devinfo = DEV_ATTR_IMX477_LINEAR_BASE;
+        vin_info->pipeinfo = PIPE_ATTR_IMX477_LINEAR_BASE;
+        vin_info->disinfo = DIS_ATTR_IMX477_LINEAR_BASE;
+        vin_info->ldcinfo = LDC_ATTR_IMX477_LINEAR_BASE;
+    } else if(raw_height == 960 && raw_width == 1280){
+        vin_info->snsinfo = SENSOR_2LANE_IMX477_120FPS_960P_10BIT_LINEAR_INFO;
+        vin_info->mipi_attr = MIPI_2LANE_SENSOR_IMX477_120FPS_960P_10BIT_LINEAR_ATTR;
+        vin_info->devinfo = DEV_ATTR_IMX477_120FPS_960P_LINEAR_BASE;
+        vin_info->pipeinfo = PIPE_ATTR_IMX477_120FPS_960P_LINEAR_BASE;
+        vin_info->disinfo = DIS_ATTR_IMX477_120FPS_960P_LINEAR_BASE;
+        vin_info->ldcinfo = LDC_ATTR_IMX477_120FPS_960P_LINEAR_BASE;
+    } else if(raw_height == 1520 && raw_width == 2016){
+        vin_info->snsinfo = SENSOR_2LANE_IMX477_40FPS_1520P_12BIT_LINEAR_INFO;
+        vin_info->mipi_attr = MIPI_2LANE_SENSOR_IMX477_40FPS_1520P_12BIT_LINEAR_ATTR;
+        vin_info->devinfo = DEV_ATTR_IMX477_40FPS_1520P_LINEAR_BASE;
+        vin_info->pipeinfo = PIPE_ATTR_IMX477_40FPS_1520P_LINEAR_BASE;
+        vin_info->disinfo = DIS_ATTR_IMX477_40FPS_1520P_LINEAR_BASE;
+        vin_info->ldcinfo = LDC_ATTR_IMX477_40FPS_1520P_LINEAR_BASE;
+    } else if(raw_height == 3000 && raw_width == 4000){
+        vin_info->snsinfo = SENSOR_2LANE_IMX477_10FPS_3000P_12BIT_LINEAR_INFO;
+        vin_info->mipi_attr = MIPI_2LANE_SENSOR_IMX477_10FPS_3000P_12BIT_LINEAR_ATTR;
+        vin_info->devinfo = DEV_ATTR_IMX477_10FPS_3000P_LINEAR_BASE;
+        vin_info->pipeinfo = PIPE_ATTR_IMX477_10FPS_3000P_LINEAR_BASE;
+        vin_info->disinfo = DIS_ATTR_IMX477_10FPS_3000P_LINEAR_BASE;
+        vin_info->ldcinfo = LDC_ATTR_IMX477_10FPS_3000P_LINEAR_BASE;
+    } else{
+        LOGE_print("Unsupported resolution,w:%d,h:%d,fps:%d",raw_width,raw_height);
+        return -1;
+    }
     vin_info->vin_vps_mode = VIN_OFFLINE_VPS_OFFINE;//TBD
     vin_info->enable_dev_attr_ex = 0;
     vin_info->snsinfo.sensorInfo.sensor_addr = 0x1a;
@@ -452,7 +559,9 @@ int vin_param_init(const int cam_idx, x3_vin_info_t *vin_info)
         return -1;
     }
 
-    sensor_id->sensor_vin_param(vin_info);
+    ret = sensor_id->sensor_vin_param(vin_info);
+    if(ret != 0)
+        return -1;
     vin_info->isp_enable = 1;
     vin_info->snsinfo.sensorInfo.bus_num = i2c_bus;
     vin_info->snsinfo.sensorInfo.entry_index = mipi_host;

@@ -6,7 +6,6 @@
  # @Date: 2023-03-05 11:20:19
  # @LastEditTime: 2023-04-20 09:30:35
 ### 
-
 usage() {
   echo "usage: bash make.sh [x3] [debug|release]"
   exit 1

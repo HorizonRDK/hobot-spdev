@@ -42,7 +42,33 @@ int32_t sp_open_camera(void *obj, const int32_t pipe_id, const int32_t video_ind
             height[chn_num] = 0;
             chn_num++;
         }
-        return sp->OpenCamera(pipe_id, video_index, 30, chn_num, width, height);
+        x3_sensors_parameters _parameters = {-1,-1,-1};
+        return sp->OpenCamera(pipe_id, video_index, 30, chn_num, &_parameters , width, height);
+    }
+    return -1;
+}
+
+int32_t sp_open_camera_v2(void *obj, const int32_t pipe_id, const int32_t video_index, int32_t chn_num, sp_sensors_parameters *parameters, int32_t *input_width, int32_t *input_height)
+{
+    if (obj != NULL)
+    {
+        auto sp = static_cast<VPPCamera *>(obj);
+        int32_t width[CAMERA_CHN_NUM] = {0};
+        int32_t height[CAMERA_CHN_NUM] = {0};
+        memcpy(width, input_width, sizeof(int) * chn_num);
+        memcpy(height, input_height, sizeof(int) * chn_num);
+        if (chn_num < (CAMERA_CHN_NUM - 1))
+        {
+            // set 0 means default size
+            width[chn_num] = 0;
+            height[chn_num] = 0;
+            chn_num++;
+        }
+        x3_sensors_parameters *_parameters = (x3_sensors_parameters *)parameters;
+        // _parameters.fps = parameters->fps;
+        // _parameters.raw_width = parameters->raw_width;
+        // _parameters.raw_height = parameters->raw_height;
+        return sp->OpenCamera(pipe_id, video_index, parameters->fps==-1?30:parameters->fps, chn_num, _parameters, width, height);
     }
     return -1;
 }

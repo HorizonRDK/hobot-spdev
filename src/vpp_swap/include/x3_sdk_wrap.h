@@ -130,7 +130,12 @@ typedef struct {
     int m_group_num;
     x3_vps_info_t m_vps_info[8];
 } x3_vps_infos_t;
-
+typedef struct
+{
+    int32_t raw_height;
+    int32_t raw_width;
+    int32_t fps;
+} x3_sensors_parameters;
 typedef struct x3_vin_info {
     /*定义 sensor   初始化的属性信息 */
     MIPI_SENSOR_INFO_S snsinfo;
@@ -144,7 +149,8 @@ typedef struct x3_vin_info {
     VIN_DIS_ATTR_S disinfo;
     /*定义 LDC 属性信息 */
     VIN_LDC_ATTR_S ldcinfo;
-
+    /*定义RAW数据的高宽以及帧率，与多分辨率的sensor有关*/
+    x3_sensors_parameters* parameters;
     int dev_id;  /* 通路索引，范围 0~7 */
     int pipe_id; /* PipeLine 号， 对应每路输入，范围 0~7 */
 
