@@ -190,6 +190,7 @@ int x3_cam_vps_init_param(x3_modules_info_t *info, const int pipe_id, int chn_nu
                 crop_width[i] = src_width;
                 crop_height[i] = src_height;
             }
+        case VPS_SCALE_ROTATE:
         case VPS_SCALE:
             if ((dst_width[i] == 0) && (dst_height[i] == 0)) {
                 if ((crop_width[i] != 0) && (crop_height[i] != 0)) {
