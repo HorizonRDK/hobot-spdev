@@ -25,7 +25,7 @@ void sp_release_display_module(void *obj)
 int32_t sp_start_display(void *obj, int32_t chn, int32_t width, int32_t height)
 {
     if (obj != NULL)
-        return static_cast<VPPDisplay *>(obj)->x3_vot_init(chn, width, height, VOT_OUTPUT_1080P30, HB_VOT_OUTPUT_BT1120, width, height);
+        return static_cast<VPPDisplay *>(obj)->x3_vot_init(chn, width, height, VOT_OUTPUT_1920x1080, HB_VOT_OUTPUT_BT1120, width, height);
     return -1;
 }
 

@@ -644,7 +644,7 @@ static int Display_init(libsrcampy_Object *self, PyObject *args, PyObject *kw)
 static PyObject *Display_display(libsrcampy_Object *self, PyObject *args, PyObject *kw)
 {
     int width = 1920, height = 1080, vot_chn = 0, chn_width = 0, chn_height = 0;
-    int vot_intf = VOT_OUTPUT_1080P30, vot_out_mode = HB_VOT_OUTPUT_BT1120;
+    int vot_intf = VOT_OUTPUT_1920x1080, vot_out_mode = HB_VOT_OUTPUT_BT1120;
     static char *kwlist[] = {(char *)"chn", (char *)"width", (char *)"height",
         (char *)"vot_intf", (char *)"vot_out_mode",
         (char *)"chn_width", (char *)"chn_height", NULL};

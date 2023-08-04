@@ -86,7 +86,7 @@ class VPPDisplay
     int m_chn_height[VOT_LAYER_NUM];
 
   private:
-    /// default VOT_OUTPUT_1080P30
+    /// default VOT_OUTPUT_1920x1080
     int m_vot_intf = 0;
 
     /// default HB_VOT_OUTPUT_BT1120
