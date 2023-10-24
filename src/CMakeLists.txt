@@ -56,6 +56,23 @@ add_library(${SPCDEV_NAME} SHARED ${SOURCE_FILES})
 
 target_link_libraries(${SPCDEV_NAME} dnn ${HBSPDEV_NAME} )
 
+# make libpostprocess.so
+set(POSTPROCESS_NAME postprocess)
+file(GLOB POSTPROCESS_INC
+	"cpp_postprocess/*.h"
+    )
+
+# 源文件路径信息
+file(GLOB POSTPROCESS_SRC
+	"cpp_postprocess/*.cpp"
+    )
+
+set(SOURCE_FILES ${POSTPROCESS_SRC} ${POSTPROCESS_INC})
+add_library(${POSTPROCESS_NAME} SHARED ${SOURCE_FILES})
+
+target_link_libraries(${POSTPROCESS_NAME} dnn ${HBSPDEV_NAME})
+
 install(TARGETS ${HBSPDEV_NAME} DESTINATION ${MY_OUTPUT_ROOT})
 install(TARGETS ${SRCAMPY_NAME} DESTINATION ${MY_OUTPUT_ROOT})
 install(TARGETS ${SPCDEV_NAME} DESTINATION ${MY_OUTPUT_ROOT})
+install(TARGETS ${POSTPROCESS_NAME} DESTINATION ${MY_OUTPUT_ROOT})
