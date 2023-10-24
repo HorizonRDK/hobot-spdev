@@ -54,7 +54,7 @@ bpu_module *x3_bpu_predict_init(const char *model_file_name)
     hbDNNTensorProperties input_properties;
     hbDNNGetInputTensorProperties(&input_properties, bpu_handle->m_dnn_handle, 0);
     bpu_handle->input_tensor.properties = input_properties;
-    hbSysAllocCachedMem(bpu_handle->input_tensor.sysMem, input_properties.validShape.dimensionSize[2] * input_properties.validShape.dimensionSize[3] * 3 / 2);
+    hbSysAllocCachedMem(bpu_handle->input_tensor.sysMem, input_properties.validShape.dimensionSize[2] * ALIGN_16(input_properties.validShape.dimensionSize[3]) * 3 / 2);
 
     print_model_info(bpu_handle->m_packed_dnn_handle);
 
