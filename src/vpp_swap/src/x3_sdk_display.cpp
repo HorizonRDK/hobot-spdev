@@ -317,6 +317,51 @@ static int32_t draw_word(uint8_t *addr, int x, int y, char *str, int width, int 
     return 0;
 }
 
+
+char* find_resolution(const char* filename, int width, int height) {
+    FILE* file = fopen(filename, "r");
+    if (file == NULL) {
+        LOGE_print("Error opening file");
+        return NULL;
+    }
+
+    char line[256];
+    while (fgets(line, sizeof(line), file) != NULL) {
+        int w, h;
+        char format[10];
+        int matched = sscanf(line, "%*[^:]:%dx%d%[^-]-%*d", &w, &h, format);
+
+        if (matched == 3 && w == width && h == height) {
+            // Check if the resolution is 640x480 and skip if it is
+            if (w == 640 && h == 480) {
+                // Skip resolutions with 60HZ refresh rate
+                if (strstr(line, "p-60") != NULL) {
+                    continue;
+                }
+            }
+
+            fclose(file);
+            return strdup(line);
+        }
+    }
+
+    fclose(file);
+    return NULL;  // Return NULL if no match is found
+}
+
+int write_to_node(const char* node_path, const char* content) {
+    FILE* node = fopen(node_path, "w");
+    if (node == NULL) {
+        LOGE_print("Error opening node");
+        return -1;
+    }
+
+    fputs(content, node);
+
+    fclose(node);
+    return 0;
+}
+
 static void vot_set_upscale_attr(VOT_UPSCALE_ATTR_S *upscale_attr, int width, int height)
 {
     float k_up, k_up_w, k_up_h;
@@ -342,6 +387,7 @@ int VPPDisplay::x3_vot_init(int chn = 0, int width = 1920, int height = 1080,
     long int screensize = 0;
     VOT_CHN_ATTR_EX_S extern_attr = {0};
     VOT_UPSCALE_ATTR_S upscale_attr = {0};
+    int fb0_fd = 0;
 
     char *buffer_ = NULL;
     int image_data_size_ = chn_width * chn_height * 3 / 2;
@@ -365,32 +411,58 @@ int VPPDisplay::x3_vot_init(int chn = 0, int width = 1920, int height = 1080,
         devAttr.u32BgColor = 0x8080;
         devAttr.enOutputMode = static_cast<VOT_OUTPUT_MODE_E>(m_vot_out_mode);
 
-        if (m_width == 1024 && m_height == 600) {
-            devAttr.enIntfSync = VO_OUTPUT_USER;
-            devAttr.stSyncInfo.pixel_clk = 49000000;
-            devAttr.stSyncInfo.hbp = 270;
-            devAttr.stSyncInfo.hfp = 5;
-            devAttr.stSyncInfo.hs = 13;
-            devAttr.stSyncInfo.vbp = 17;
-            devAttr.stSyncInfo.vfp = 2;
-            devAttr.stSyncInfo.vs = 3;
-            devAttr.stSyncInfo.width = m_width;
-            devAttr.stSyncInfo.height = m_height;
-        } else if (m_width == 800 && m_height == 480) {
-            devAttr.enIntfSync = VO_OUTPUT_USER;
-            devAttr.stSyncInfo.pixel_clk = 33900000;
-            devAttr.stSyncInfo.hbp = 168;
-            devAttr.stSyncInfo.hfp = 44;
-            devAttr.stSyncInfo.hs = 88;
-            devAttr.stSyncInfo.vbp = 46;
-            devAttr.stSyncInfo.vfp = 3;
-            devAttr.stSyncInfo.vs = 6;
-            devAttr.stSyncInfo.width = m_width;
-            devAttr.stSyncInfo.height = m_height;
+
+        fb0_fd = open("/dev/fb0", O_RDWR);
+        /* Get variable screen information */
+        if (ioctl(fb0_fd, FBIOGET_VSCREENINFO, &vinfo)) {
+            LOGE_print("Error reading variable information.\n");
+            goto err3;
         }
-        else if (m_width == 1280 && m_height == 720){
-            devAttr.enIntfSync = VOT_OUTPUT_720P60;
+        //Store origin crop prop(w,h)
+        origin_src_height = vinfo.yres_virtual;
+        origin_src_width = vinfo.xres_virtual;
+        origin_crop_height = vinfo.yres;
+        origin_crop_width = vinfo.xres;
+        //If input width and height equal current screen size
+        //Use fb var timing to config hdmi and iar
+        if(m_width != vinfo.xres && m_height != vinfo.yres){
+            const char* fb_modes = "/sys/class/graphics/fb0/modes";
+            const char* fb_mode = "/sys/class/graphics/fb0/mode";
+            char* result = find_resolution(fb_modes, m_width, m_height);
+            if (result != NULL) {
+                LOGI_print("Matching resolution: %s", result);
+                // Write the matching resolution to the specified node
+                if (write_to_node(fb_mode, result) == 0) {
+                    LOGI_print("Successfully wrote to %s\n", fb_mode);
+                } else {
+                    LOGE_print("Error writing to %s\n", fb_mode);
+                }
+
+                free(result);
+            } else {
+                LOGE_print("No matching resolution found.\n");
+            }
         }
+        if (ioctl(fb0_fd, FBIOGET_VSCREENINFO, &vinfo)) {
+            LOGE_print("Error reading variable information.\n");
+            goto err3;
+        }
+
+        devAttr.enIntfSync = VO_OUTPUT_USER;
+        devAttr.stSyncInfo.hfp =vinfo.right_margin;
+        devAttr.stSyncInfo.hbp =vinfo.left_margin;
+        devAttr.stSyncInfo.vfp =vinfo.lower_margin;
+        devAttr.stSyncInfo.vbp =vinfo.upper_margin;
+        devAttr.stSyncInfo.hs = vinfo.hsync_len;
+        devAttr.stSyncInfo.vs = vinfo.vsync_len;
+        devAttr.stSyncInfo.vfp_cnt = 0X0;
+        devAttr.stSyncInfo.pixel_clk = 1000000000000 / vinfo.pixclock;
+        devAttr.stSyncInfo.width = m_width;
+        devAttr.stSyncInfo.height = m_height;
+
+
+        //LOGE_print("ori w:%d,ori h:%d\n",origin_src_width,origin_src_width);
+
         ret = HB_VOT_SetPubAttr(0, &devAttr);
         if (ret) {
             LOGE_print("HB_VOT_SetPubAttr failed\n");
@@ -566,6 +638,51 @@ err:
     return ret;
 }
 
+
+
+
+int VPPDisplay::reset_iar_crop(void){
+    channel_base_cfg_t channel_base_cfg[1] = {0};
+	uint32_t ret = 0;
+
+    int iar_fd = open(IAR_DEV_PATH, O_RDWR | O_NONBLOCK, 0);
+	channel_base_cfg[0].enable = 1;
+	channel_base_cfg[0].channel = IAR_CHANNEL_3;
+	channel_base_cfg[0].pri = 0;
+	channel_base_cfg[0].width = origin_src_width;
+	channel_base_cfg[0].height = origin_src_height;
+	channel_base_cfg[0].buf_width = origin_src_width;
+	channel_base_cfg[0].buf_height = origin_src_height;
+	channel_base_cfg[0].format = 3;
+	channel_base_cfg[0].alpha_sel = 0;
+	channel_base_cfg[0].ov_mode = 0;
+	channel_base_cfg[0].alpha_en = 1;
+	channel_base_cfg[0].alpha = 255;
+	channel_base_cfg[0].crop_width = origin_crop_width;
+	channel_base_cfg[0].crop_height = origin_crop_height;
+    ret = ioctl(iar_fd, IAR_CHANNEL_CFG, &channel_base_cfg[0]);
+    if(ret){
+        LOGE_print("Error: failed to send IAR_CHANNEL_CFG cmd to iar_cdev.\n");
+    }
+    const char* fb_modes = "/sys/class/graphics/fb0/modes";
+    const char* fb_mode = "/sys/class/graphics/fb0/mode";
+    char* result = find_resolution(fb_modes, origin_crop_width, origin_crop_height);
+    if (result != NULL) {
+        LOGI_print("Matching resolution: %s", result);
+        // Write the matching resolution to the specified node
+        if (write_to_node(fb_mode, result) == 0) {
+            LOGI_print("Successfully wrote to %s\n", fb_mode);
+        } else {
+            LOGE_print("Error writing to %s\n", fb_mode);
+        }
+
+        free(result);
+    } else {
+        LOGE_print("No matching resolution found.\n");
+    }
+    return ret;
+}
+
 int VPPDisplay::x3_vot_deinit()
 {
     int ret = 0;
@@ -602,7 +719,10 @@ int VPPDisplay::x3_vot_deinit()
         LOGE_print("HB_VOT_Disable failed.\n");
     }
     m_disp_inited.clear();
-
+    ret = reset_iar_crop();
+    if(ret) {
+        LOGE_print("reset_iar_crop failed.\n");
+    }
     return ret;
 }
 

@@ -34,16 +34,17 @@
 #include "vio/hb_vp_api.h"
 
 #include "x3_sdk_camera.h"
-
+#include "iar_interface.h"
 using namespace std;
 
 namespace srpy_cam
 {
-
+#define IAR_CDEV_MAGIC 'R'
 #define VOT_LAYER_NUM 4
 #define VOT_VIDEO_LAYER_NUM 2
 #define VOT_GRAPH_LAYER_NUM 2
-
+#define IAR_DEV_PATH "/dev/iar_cdev"
+#define IAR_CHANNEL_CFG 	_IOW(IAR_CDEV_MAGIC,0x14, channel_base_cfg_t)
 class VPPDisplay
 {
   public:
@@ -86,6 +87,9 @@ class VPPDisplay
     int m_chn_height[VOT_LAYER_NUM];
 
   private:
+    int reset_iar_crop(void);
+
+  private:
     /// default VOT_OUTPUT_1920x1080
     int m_vot_intf = 0;
 
@@ -96,6 +100,11 @@ class VPPDisplay
     uint8_t *m_fbp[VOT_GRAPH_LAYER_NUM] = {NULL, NULL};
 
     atomic_flag m_disp_inited = ATOMIC_FLAG_INIT;
+
+    int origin_crop_width = 0;
+    int origin_crop_height = 0;
+    int origin_src_width = 0;
+    int origin_src_height = 0;
 };
 
 }; // namespace srpy_cam
