@@ -278,7 +278,7 @@ int AV_read_frame(AVFormatContext *avContext, AVPacket *avpacket,
     }
     if (error < 0) {
         if (error == AVERROR_EOF || avContext->pb->eof_reached == 1) {
-            printf("There is no more input data, %d!\n", avpacket->size);
+            LOGD_print("There is no more input data, %d!\n", avpacket->size);
         } else {
             printf("Failed to av_read_frame error(0x%08x)\n", error);
         }

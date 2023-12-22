@@ -220,6 +220,8 @@ int x3_cam_vps_init_param(x3_modules_info_t *info, const int pipe_id, int chn_nu
                 ret |= vps_chn_rotate_param_init(&info->m_vps_infos.m_vps_info[0].m_vps_chn_attrs[chn_index],
                     rotate[i] % ROTATION_MAX);
             }
+            printf("Setting VPS channel-%d: src_w:%d, src_h:%d; dst_w:%d, dst_h:%d;\n", chn_data,
+                src_width, src_height, dst_width[i], dst_height[i]);
             chn_en |= 1 << chn_data;
             chn_index++;
         } else {
@@ -516,7 +518,7 @@ static int GetSifRawData(const int pipe_id, ImageFrame *image_frame, const int t
 #if EN_PRINT_INFO
         printf("pipe:%d dump normal sif frame id(%ld),plane(%d)size(%d)\n",
                pipe_id, image_frame->image_id, sif_img->img_info.planeCount,
-               size);
+               data_size);
 #endif
     } else if (sif_img->img_info.planeCount == 2) { // yuv的 planeCount是2
         data_size = sif_img->img_info.size[0] + sif_img->img_info.size[1];
@@ -539,7 +541,7 @@ static int GetSifRawData(const int pipe_id, ImageFrame *image_frame, const int t
 #if EN_PRINT_INFO
         printf("pipe:%d dump normal sif frame id(%ld),plane(%d)size(%d)\n",
                pipe_id, image_frame->image_id, sif_img->img_info.planeCount,
-               size);
+               data_size);
 #endif
     } else {
         printf("pipe:%d raw buf planeCount wrong !!!\n", pipe_id);
@@ -600,7 +602,7 @@ static int GetISPYuvData(const int pipe_id, ImageFrame *image_frame, const int t
 #if EN_PRINT_INFO
         printf("pipe:%d dump normal raw frame id(%ld),plane(%d)size(%d)\n",
                pipe_id, image_frame->image_id, isp_yuv->img_info.planeCount,
-               size);
+               data_size);
 #endif
     } else {
         printf("pipe:%d isp yuv buf planeCount wrong !!!\n", pipe_id);
@@ -661,7 +663,7 @@ static int GetVpsChnData(const int pipe_id, int chn_id, ImageFrame *image_frame,
 #if EN_PRINT_INFO
         printf("pipe:%d dump normal raw frame id(%ld),plane(%d)size(%d)\n",
                pipe_id, image_frame->image_id, vps_yuv->img_info.planeCount,
-               size);
+               data_size);
 #endif
     } else {
         printf("pipe:%d isp yuv buf planeCount wrong !!!\n", pipe_id);
@@ -810,9 +812,11 @@ int VPPCamera::GetChnId(Sdk_Object_e object, int for_bind, int width, int height
         if (for_bind) {
             // for bind
             if (chn_attr->m_is_bind == VPP_CAMERA) {
-                if (width != 0 && height != 0 &&
-                    width != (int)chn_attr->m_chn_attr.width &&
-                    height != (int)chn_attr->m_chn_attr.height) {
+                if(width == 0 && height == 0){
+                    return chn_attr->m_chn_id;
+                }
+                if ((width != (int)chn_attr->m_chn_attr.width ||
+                    height != (int)chn_attr->m_chn_attr.height)) {
                     continue;
                 }
                 chn_attr->m_is_bind = object;
@@ -821,9 +825,11 @@ int VPPCamera::GetChnId(Sdk_Object_e object, int for_bind, int width, int height
         } else {
             // for unbind
             if (chn_attr->m_is_bind == object) {
-                if (width != 0 && height != 0 &&
-                    width != (int)chn_attr->m_chn_attr.width &&
-                    height != (int)chn_attr->m_chn_attr.height) {
+                if(width == 0 && height == 0){
+                    return chn_attr->m_chn_id;
+                }
+                if ((width != (int)chn_attr->m_chn_attr.width ||
+                    height != (int)chn_attr->m_chn_attr.height)) {
                     continue;
                 }
                 chn_attr->m_is_bind = VPP_CAMERA;
