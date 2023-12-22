@@ -466,7 +466,7 @@ void VPPCodec::x3_do_sync_decoding(void *param)
 
         if (error < 0) {
             if (error == AVERROR_EOF || avContext->pb->eof_reached == HB_TRUE) {
-                LOGE_print("There is no more input data, %d!\n", avpacket.size);
+                LOGD_print("There is no more input data, %d!\n", avpacket.size);
                 eos = false;
                 break;
             } else {

@@ -585,7 +585,7 @@ int VPPDisplay::x3_vot_init(int chn = 0, int width = 1920, int height = 1080,
         upscale_attr.upscale_en = 1;
     }
     ret = HB_VOT_SetVideoLayerUpScale(0, &upscale_attr);
-    if (ret < 0) {
+    if (ret != 0) {
         LOGE_print("Error: failed to HB_VOT_SetVideoLayerUpScale.\n");
     }
 
