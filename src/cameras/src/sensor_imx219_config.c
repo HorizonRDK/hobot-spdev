@@ -102,7 +102,7 @@ VIN_PIPE_ATTR_S PIPE_ATTR_IMX219_LINEAR_BASE = {
 		.height = 1080,
 	},
 	.cfaPattern = PIPE_BAYER_RGGB, // 数据格式布局(sensor输出的图像格式是RGGB还是BGGR),和sensor保持一致，查sensor数据手册可知
-	.temperMode = 2, // 时序降噪模式，2代表2帧融合，3代表3帧融合
+	.temperMode = 1, // 时序降噪模式，2代表2帧融合，3代表3帧融合
 	.ispBypassEn = 0, // 是否使能 isp 的 bypass, sensor必须支持输出yuv
 	.ispAlgoState = 1, // 是否启动 3a 算法库 ,1 是启动， 0 是关闭
 	.bitwidth = 10, // raw图位宽，有效值 8 、 10 、 12 、14 、 16 、 20
@@ -274,7 +274,7 @@ VIN_PIPE_ATTR_S PIPE_ATTR_IMX219_30FPS_480P_LINEAR_BASE = {
 		.height = 480,
 	},
 	.cfaPattern = PIPE_BAYER_RGGB, // 数据格式布局(sensor输出的图像格式是RGGB还是BGGR),和sensor保持一致，查sensor数据手册可知
-	.temperMode = 2, // 时序降噪模式，2代表2帧融合，3代表3帧融合
+	.temperMode = 1, // 时序降噪模式，2代表2帧融合，3代表3帧融合
 	.ispBypassEn = 0, // 是否使能 isp 的 bypass, sensor必须支持输出yuv
 	.ispAlgoState = 1, // 是否启动 3a 算法库 ,1 是启动， 0 是关闭
 	.bitwidth = 10, // raw图位宽，有效值 8 、 10 、 12 、14 、 16 、 20
@@ -446,7 +446,7 @@ VIN_PIPE_ATTR_S PIPE_ATTR_IMX219_30FPS_1232P_LINEAR_BASE = {
 		.height = 1232,
 	},
 	.cfaPattern = PIPE_BAYER_RGGB, // 数据格式布局(sensor输出的图像格式是RGGB还是BGGR),和sensor保持一致，查sensor数据手册可知
-	.temperMode = 2, // 时序降噪模式，2代表2帧融合，3代表3帧融合
+	.temperMode = 1, // 时序降噪模式，2代表2帧融合，3代表3帧融合
 	.ispBypassEn = 0, // 是否使能 isp 的 bypass, sensor必须支持输出yuv
 	.ispAlgoState = 1, // 是否启动 3a 算法库 ,1 是启动， 0 是关闭
 	.bitwidth = 10, // raw图位宽，有效值 8 、 10 、 12 、14 、 16 、 20
@@ -618,7 +618,7 @@ VIN_PIPE_ATTR_S PIPE_ATTR_IMX219_15FPS_2464P_LINEAR_BASE = {
 		.height = 2464,
 	},
 	.cfaPattern = PIPE_BAYER_RGGB, // 数据格式布局(sensor输出的图像格式是RGGB还是BGGR),和sensor保持一致，查sensor数据手册可知
-	.temperMode = 2, // 时序降噪模式，2代表2帧融合，3代表3帧融合
+	.temperMode = 1, // 时序降噪模式，2代表2帧融合，3代表3帧融合
 	.ispBypassEn = 0, // 是否使能 isp 的 bypass, sensor必须支持输出yuv
 	.ispAlgoState = 1, // 是否启动 3a 算法库 ,1 是启动， 0 是关闭
 	.bitwidth = 10, // raw图位宽，有效值 8 、 10 、 12 、14 、 16 、 20
