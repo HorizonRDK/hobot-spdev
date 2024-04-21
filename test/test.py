@@ -1,9 +1,8 @@
 import sys, os, time
-sys.path.append('/usr/lib/hobot-srcampy')
 
 import numpy as np
 import cv2
-import libsrcampy
+from hobot_vio import libsrcampy
 
 def get_nalu_pos(byte_stream):
     size = byte_stream.__len__()
@@ -54,15 +53,15 @@ def get_h264_nalu_type(byte_stream):
     return nalu_types
 
 def test_camera():
+    print("[INFO] Running test_camera")
     cam = libsrcampy.Camera()
-    ret = pcam.open_cam(0, 0, 30, 1920, 1080)
+    ret = cam.open_cam(0, -1, 30, 1920, 1080)
     print("Camera open_cam return:%d" % ret)
-    # wait for isp tuning
-    time.sleep(1)
+    time.sleep(3)
     img = cam.get_img(2)
     if img is not None:
         #save file
-        fo = open("output.img", "wb")
+        fo = open("output.yuv", "wb")
         fo.write(img)
         fo.close()
         print("camera save img file success")
@@ -72,12 +71,12 @@ def test_camera():
     print("test_camera done!!!")
 
 def test_camera_vps():
-    #vps start
+    print("[INFO] Running test_camera_vps")
     vps = libsrcampy.Camera()
     ret = vps.open_vps(1, 1, 1920, 1080, 512, 512)
     print("Camera vps return:%d" % ret)
 
-    fin = open("output.img", "rb")
+    fin = open("output.yuv", "rb")
     img = fin.read()
     fin.close()
     ret = vps.set_img(img)
@@ -96,6 +95,7 @@ def test_camera_vps():
     print("test_camera_vps done!!!")
 
 def test_encode():
+    print("[INFO] Running test_encode")
     #encode file
     enc = libsrcampy.Encoder()
     ret = enc.encode(0, 1, 1920, 1080)
@@ -104,7 +104,7 @@ def test_encode():
     #save file
     fo = open("encode.h264", "wb+")
     a = 0
-    fin = open("output.img", "rb")
+    fin = open("output.yuv", "rb")
     input_img = fin.read()
     fin.close()
     while a < 100:
@@ -122,6 +122,7 @@ def test_encode():
     print("test_encode done!!!")
 
 def test_decode():
+    print("[INFO] Running test_decode")
     #decode start
     dec = libsrcampy.Decoder()
 
@@ -131,7 +132,7 @@ def test_decode():
     img = dec.get_img()
     if img is not None:
         #save file
-        fo = open("output.img", "wb")
+        fo = open("output.yuv", "wb")
         fo.write(img)
         fo.close()
         print("decode save img file success")
@@ -142,6 +143,7 @@ def test_decode():
     print("test_decode done!!!")
 
 def test_display():
+    print("[INFO] Running test_display")
     disp = libsrcampy.Display()
     ret = disp.display(0, 1920, 1080, 0, 1)
     print ("Display display 0 return:%d" % ret)
@@ -153,7 +155,7 @@ def test_display():
     ret = disp.set_graph_word(300, 300, string.encode('gb2312'), 2, 0, 0xff00ffff)
     print ("Display set_graph_word return:%d" % ret)
 
-    fo = open("output.img", "rb")
+    fo = open("output.yuv", "rb")
     img = fo.read()
     fo.close()
     ret = disp.set_img(img)
@@ -165,9 +167,10 @@ def test_display():
     print("test_display done!!!")
 
 def test_camera_bind_encode():
+    print("[INFO] Running test_camera_bind_encode")
     #camera start
     cam = libsrcampy.Camera()
-    ret = pcam.open_cam(0, 0, 30, [1920, 1280], [1080, 720])
+    ret = cam.open_cam(0, -1, 30, [1920, 1280], [1080, 720])
     print("Camera open_cam return:%d" % ret)
 
     #encode start
@@ -212,9 +215,10 @@ def test_camera_bind_encode():
     print("test_camera_bind_encode done!!!")
 
 def test_camera_bind_display():
+    print("[INFO] Running test_camera_bind_display")
     #camera start
     cam = libsrcampy.Camera()
-    ret = pcam.open_cam(0, 0, 30, 1280, 720)
+    ret = cam.open_cam(0, -1, 30, 1280, 720)
     print("Camera open_cam return:%d" % ret)
 
     #display start
@@ -238,6 +242,7 @@ def test_camera_bind_display():
     print("test_camera_bind_display done!!!")
 
 def test_decode_bind_display():
+    print("[INFO] Running test_decode_bind_display")
     #decode start
     dec = libsrcampy.Decoder()
     ret = dec.decode("encode.h264", 0, 1, 1920, 1080)
@@ -269,9 +274,10 @@ def test_decode_bind_display():
     print("test_decode_bind_display done!!!")
 
 def test_cam_bind_encode_decode_bind_display():
+    print("[INFO] Running test_cam_bind_encode_decode_bind_display")
     #camera start
     cam = libsrcampy.Camera()
-    ret = pcam.open_cam(0, 0, 30, [1920, 1280], [1080, 720])
+    ret = cam.open_cam(0, -1, 30, [1920, 1280], [1080, 720])
     print("Camera open_cam return:%d" % ret)
 
     #encode file
@@ -313,9 +319,10 @@ def test_cam_bind_encode_decode_bind_display():
     print("test_cam_bind_encode_decode_bind_display done!!!")
 
 def test_cam_vps_display():
+    print("[INFO] Running test_cam_vps_display")
     #camera start
     cam = libsrcampy.Camera()
-    ret = pcam.open_cam(0, 0, 30, [1920, 1280], [1080, 720])
+    ret = cam.open_cam(0, -1, 30, [1920, 1280], [1080, 720])
     print("Camera open_cam return:%d" % ret)
 
     #vps start
@@ -350,7 +357,9 @@ def test_cam_vps_display():
     cam.close_cam()
     print("test_cam_vps_display done!!!")
 
-def test_rtsp_decode_bind_vps_bind_disp(rtsp_url):
+def test_rtsp_decode_bind_vps_bind_disp():
+    rtsp_url = "rtsp://127.0.0.1/3840x2160.264"
+    print(f"[INFO] Running test_rtsp_decode_bind_vps_bind_disp with URL: {rtsp_url}")
     find_pps_sps = 0
 
     #rtsp start
@@ -410,16 +419,46 @@ def test_rtsp_decode_bind_vps_bind_disp(rtsp_url):
     print("test_rtsp_decode_bind_vps_bind_disp done!!!")
 
 
-test_camera()
-test_camera_vps()
-test_encode()
-test_decode()
-test_display()
-test_camera_bind_encode()
-test_camera_bind_display()
-test_decode_bind_display()
-test_cam_bind_encode_decode_bind_display()
-test_cam_vps_display()
+def main(selected_tests):
+    tests = {
+        1: test_camera,
+        2: test_camera_vps,
+        3: test_encode,
+        4: test_decode,
+        5: test_display,
+        6: test_camera_bind_encode,
+        7: test_camera_bind_display,
+        8: test_decode_bind_display,
+        9: test_cam_bind_encode_decode_bind_display,
+        10: test_cam_vps_display,
+        11: test_rtsp_decode_bind_vps_bind_disp,
+    }
+    for test_num in selected_tests:
+        if test_num in tests:
+            tests[test_num]()
+        else:
+            print(f"Invalid test number: {test_num}")
 
-# rtsp_url = "rtsp://127.0.0.1/3840x2160.264"
-# test_rtsp_decode_bind_vps_bind_disp(rtsp_url)
+if __name__ == "__main__":
+    print("Available tests:")
+    print("1: test_camera")
+    print("2: test_camera_vps")
+    print("3: test_encode")
+    print("4: test_decode")
+    print("5: test_display")
+    print("6: test_camera_bind_encode")
+    print("7: test_camera_bind_display")
+    print("8: test_decode_bind_display")
+    print("9: test_cam_bind_encode_decode_bind_display")
+    print("10: test_cam_vps_display")
+    print("11: test_rtsp_decode_bind_vps_bind_disp")
+    print("Enter the numbers of tests to run (separated by spaces), or 'all' to run all tests:")
+
+    user_input = input().strip().lower()
+
+    if user_input == 'all':
+        selected_tests = range(1, 12)
+    else:
+        selected_tests = [int(num) for num in user_input.split()]
+
+    main(selected_tests)
