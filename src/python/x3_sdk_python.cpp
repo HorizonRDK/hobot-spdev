@@ -1,7 +1,5 @@
 /*
- * Horizon Robotics
- *
- * Copyright (C) 2022 Horizon Robotics Inc.
+ * Copyright (C) 2024 D-Robotics Inc.
  * All rights reserved.
  * Author:
  *
@@ -921,7 +919,7 @@ static PyTypeObject libsrcampy_CameraType = {
     0,                                               /* tp_setattro */
     0,                                               /* tp_as_buffer */
     Py_TPFLAGS_DEFAULT,                              /* tp_flags */
-    "My first camera object.",                       /* tp_doc */
+    "Camera object",                                 /* tp_doc */
     0,                                               /* tp_traverse */
     0,                                               /* tp_clear */
     0,                                               /* tp_richcompare */
@@ -971,7 +969,7 @@ static PyTypeObject libsrcampy_EncoderType = {
     0,                                                /* tp_setattro */
     0,                                                /* tp_as_buffer */
     Py_TPFLAGS_DEFAULT,                               /* tp_flags */
-    "My first encoder object.",                       /* tp_doc */
+    "Encoder object",                                 /* tp_doc */
     0,                                                /* tp_traverse */
     0,                                                /* tp_clear */
     0,                                                /* tp_richcompare */
@@ -1021,7 +1019,7 @@ static PyTypeObject libsrcampy_DecoderType = {
     0,                                                /* tp_setattro */
     0,                                                /* tp_as_buffer */
     Py_TPFLAGS_DEFAULT,                               /* tp_flags */
-    "My first decoder object.",                       /* tp_doc */
+    "Decoder object",                                 /* tp_doc */
     0,                                                /* tp_traverse */
     0,                                                /* tp_clear */
     0,                                                /* tp_richcompare */
@@ -1072,7 +1070,7 @@ static PyTypeObject libsrcampy_DisplayType = {
     0,                                                /* tp_setattro */
     0,                                                /* tp_as_buffer */
     Py_TPFLAGS_DEFAULT,                               /* tp_flags */
-    "My first display object.",                       /* tp_doc */
+    "Display object.",                                /* tp_doc */
     0,                                                /* tp_traverse */
     0,                                                /* tp_clear */
     0,                                                /* tp_richcompare */

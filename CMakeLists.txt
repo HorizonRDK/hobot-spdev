@@ -26,14 +26,14 @@ if ("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
   list(APPEND CMAKE_C_FLAGS "-march=armv8-a -mcpu=cortex-a53 -O3 ")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC ")
 else ()
-  list(APPEND CMAKE_C_FLAGS "-march=armv8-a -mcpu=cortex-a53 -g -O0 -fPIC ")
+  list(APPEND CMAKE_C_FLAGS "-march=armv8-a -mcpu=cortex-a53 -g -O0 -fPIC -ggdb ")
 endif()
 
 list(APPEND CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++14 -fno-permissive ")
 string(REGEX REPLACE ";" " " CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
 string(REGEX REPLACE ";" " " CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-set(MY_OUTPUT_ROOT $ENV{BUILD_OUTPUT_PATH}/output)
-set(MY_BUILD_ROOT $ENV{BUILD_OUTPUT_PATH}/build)
+set(SPDEV_OUTPUT_ROOT $ENV{BUILD_OUTPUT_PATH}/output)
+set(SPDEV_BUILD_ROOT $ENV{BUILD_OUTPUT_PATH}/build)
 
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/cameras/include
@@ -49,6 +49,7 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/include/isp
     ${CMAKE_CURRENT_SOURCE_DIR}/include/hbusb
     ${CMAKE_CURRENT_SOURCE_DIR}/hobot-dnn/usr/include
+    $ENV{SYSROOT_DIR}/usr/include/aarch64-linux-gnu
 )
 
 link_directories(
@@ -57,6 +58,8 @@ link_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/lib/hbmedia
   ${CMAKE_CURRENT_SOURCE_DIR}/lib/aarch64-linux-gnu
   ${CMAKE_CURRENT_SOURCE_DIR}/hobot-dnn/usr/lib/hbbpu
+  $ENV{SYSROOT_DIR}/usr/lib/aarch64-linux-gnu
+  $ENV{SYSROOT_DIR}/usr/lib/aarch64-none-linux-gnu
 )
 
 set(CMAKE_SKIP_BUILD_RPATH FALSE)
@@ -69,7 +72,7 @@ set(OUTPUT_ROOT ${CMAKE_SOURCE_DIR}/output/${PROJECT_NAME})
 set(BASE_LIBRARIES pthread dl rt)
 
 if ("${SOC}" STREQUAL "X3")
-    set(HB_SDK_LIB hbmedia multimedia avutil avformat vio gdcbin isp isp_algo iar cam tinyalsa alog python3.8)
+    set(HB_SDK_LIB hbmedia multimedia avutil avformat vio gdcbin isp isp_algo iar cam tinyalsa alog python3.10)
 endif()
 
 # add spdev include path
@@ -77,13 +80,11 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utils/include
     ${CMAKE_CURRENT_SOURCE_DIR}/src/vp_swap/include
     ${CMAKE_CURRENT_SOURCE_DIR}/src/python/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/python/include/python3.6m
     ${CMAKE_CURRENT_SOURCE_DIR}/src/clang
     ${CMAKE_CURRENT_SOURCE_DIR}/src/cpp_postprocess
 )
 
-
-install(DIRECTORY ${MY_BUILD_ROOT}/src/libhbspdev.so
-	DESTINATION ${MY_OUTPUT_ROOT}/)
+install(FILES ${SPDEV_BUILD_ROOT}/src/libhbspdev.so
+	DESTINATION ${SPDEV_OUTPUT_ROOT}/)
 
 add_subdirectory(src)

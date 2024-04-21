@@ -1,9 +1,7 @@
 '''
 COPYRIGHT NOTICE
-Copyright 2023 Horizon Robotics, Inc.
+Copyright 2024 D-Robotics, Inc.
 All rights reserved.
-Date: 2023-04-11 15:50:01
-LastEditTime: 2023-04-11 15:50:02
 '''
 import os
 import sys
@@ -16,23 +14,22 @@ from setuptools.command.build_ext import build_ext
 # option can be x86 or aarch64
 arch="aarch64"
 
-
 classifiers = ['Operating System :: POSIX :: Linux',
                'License :: OSI Approved :: MIT License',
                'Intended Audience :: Developers',
-               'Programming Language :: Python :: 3.8',
+               'Programming Language :: Python :: 3.10',
                'Topic :: Software Development',
                'Topic :: System :: Hardware']
 
 setup(
-    name="hobot_vio",
-    version="2.0.0",
-    author="horizon",
-    author_email="technical_support@horizon.ai",
-    description="VIO of python API",
+    name="hobot_dnn",
+    version="2.3.0",
+    author="d-robotics",
+    author_email="technical_support@d-robotics.cc",
+    description="python API for Deep Neural Network inference engine",
     classifiers = classifiers,
     package_dir = {'': './'},
-    packages = ['hobot_vio'],
-    package_data = {'hobot_vio': ['libhbspdev.so', 'libsrcampy.so',]},
+    packages = ['hobot_dnn'],
+    package_data = {'hobot_dnn': ['libdnnpy.so', 'pyeasy_dnn.so']},
     include_package_data = True,
 )

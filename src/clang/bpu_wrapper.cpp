@@ -31,7 +31,6 @@ void HB_CHECK_SUCCESS(int32_t value, char *errmsg)
 
 bpu_module *x3_bpu_predict_init(const char *model_file_name)
 {
-
     bpu_module *bpu_handle = (bpu_module *)malloc(sizeof(bpu_module));
     memset(bpu_handle, 0, sizeof(bpu_module));
     //第一步加载模型
