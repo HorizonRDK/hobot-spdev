@@ -54,6 +54,101 @@ std::string TensorType[] = {"Y",
 
 std::map<int, std::string> TensorLayout = {{0, "NHWC"}, {2, "NCHW"}, {255, "NONE"}};
 
+/**
+ * C++ => Python
+ * Convert buffer to numpy array
+ * @param arr
+ * @param properties
+ * @return PyArrayObject*
+ */
+PyObject* buffer_2_numpy(void *arr, hbDNNTensorProperties &properties, int npy_type, int32_t type_size) {
+    hbDNNTensorShape buffer_shape = properties.validShape;
+    int size = 1;
+    for (int i = 0; i < 4; i++) {
+        size *= buffer_shape.dimensionSize[i];
+    }
+
+    // 创建 numpy 数组对象
+    npy_intp dims[4];
+    for (int i = 0; i < 4; ++i) {
+        dims[i] = buffer_shape.dimensionSize[i];
+    }
+    PyObject *array = PyArray_SimpleNew(4, dims, npy_type);
+    if (!array) {
+        PyErr_SetString(PyExc_RuntimeError, "Failed to create numpy array.");
+        return NULL;
+    }
+
+    // 从缓冲区复制数据到 numpy 数组中
+    void *data_ptr = PyArray_DATA((PyArrayObject*)array);
+    memcpy(data_ptr, arr, size * type_size);
+
+    return array;
+}
+
+PyObject* buffer_2_pyarray(void *arr, hbDNNTensorProperties &properties) {
+    hbDNNDataType dataType = static_cast<hbDNNDataType>(properties.tensorType);
+
+    switch (dataType) {
+        case HB_DNN_TENSOR_TYPE_S8:
+            return buffer_2_numpy(reinterpret_cast<int8_t *>(arr), properties, NPY_INT8, sizeof(int8_t));
+        case HB_DNN_TENSOR_TYPE_S32:
+            return buffer_2_numpy(reinterpret_cast<int32_t *>(arr), properties, NPY_INT32, sizeof(int32_t));
+        case HB_DNN_TENSOR_TYPE_F32:
+            return buffer_2_numpy(reinterpret_cast<float *>(arr), properties, NPY_FLOAT, sizeof(float));
+        default:
+            // Do not support data type, using default int8 for output.
+            return buffer_2_numpy(reinterpret_cast<int8_t *>(arr), properties, NPY_INT8, sizeof(int8_t));
+    }
+}
+
+
+int32_t NumpyCopyHelper(hbDNNTensor *input_tensor,
+                        unsigned char *src,
+                        uint32_t size) {
+  void *dst = input_tensor->sysMem[0].virAddr;
+  switch (input_tensor->properties.tensorType) {
+    case HB_DNN_IMG_TYPE_YUV444:
+    case HB_DNN_IMG_TYPE_RGB:
+    case HB_DNN_IMG_TYPE_BGR:
+    case HB_DNN_TENSOR_TYPE_U8:
+      memcpy(dst, src, size);
+      break;
+    case HB_DNN_TENSOR_TYPE_S8:
+      memcpy(dst, src, size);
+      break;
+    case HB_DNN_TENSOR_TYPE_S16:
+      memcpy(dst, src, size);
+      break;
+    case HB_DNN_TENSOR_TYPE_U16:
+      memcpy(dst, src, size);
+      break;
+    case HB_DNN_TENSOR_TYPE_F32:
+      memcpy(dst, src, size);
+      break;
+    case HB_DNN_TENSOR_TYPE_S32:
+      memcpy(dst, src, size);
+      break;
+    case HB_DNN_TENSOR_TYPE_U32:
+      memcpy(dst, src, size);
+      break;
+    case HB_DNN_TENSOR_TYPE_F64:
+      memcpy(dst, src, size);
+      break;
+    case HB_DNN_TENSOR_TYPE_S64:
+      memcpy(dst, src, size);
+      break;
+    case HB_DNN_TENSOR_TYPE_U64:
+      memcpy(dst, src, size);
+      break;
+    default:
+      std::cout << "Transpose data type error: "
+                << input_tensor->properties.tensorType << std::endl;
+      return -1;
+  }
+  return 0;
+}
+
 static PyObject *TensorProperties_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     TensorProperties *self = (TensorProperties *)type->tp_alloc(type, 0);
@@ -127,28 +222,38 @@ static PyObject* tensorproperties_get_layout(TensorProperties *self, void *closu
 
 // 获取 shape 成员属性的 getter 函数
 static PyObject* tensorproperties_get_shape(TensorProperties *self, void *closure) {
-    // 将 self->shape 转换为 Python 对象并返回
-    // 假设 self->shape 是一个整数列表，你可以根据实际情况调整转换方式
+    // 创建一个元组来存储 shape
+    PyObject *shape_tuple = PyTuple_New(self->shape_size);
+    if (!shape_tuple) {
+        // 错误处理，如果创建元组失败
+        return NULL;
+    }
 
-    PyObject *shape_list = PyList_New(self->shape_size);
     for (int i = 0; i < self->shape_size; ++i) {
         PyObject *dim = PyLong_FromLong(self->shape[i]);
-        PyList_SET_ITEM(shape_list, i, dim);
+        if (!dim) {
+            // 错误处理，如果创建 Python 对象失败
+            Py_DECREF(shape_tuple); // 释放之前创建的元组
+            return NULL;
+        }
+        // 将 dim 添加到元组中
+        PyTuple_SET_ITEM(shape_tuple, i, dim);
     }
-    return shape_list;
+
+    // 返回元组
+    return shape_tuple;
 }
 
 // 获取 scale_data 成员属性的 getter 函数
 static PyObject* tensorproperties_get_scale_data(TensorProperties *self, void *closure) {
-    // 将 self->scale_data 转换为 Python 对象并返回
-    // 假设 self->scale_data 是一个浮点数列表，你可以根据实际情况调整转换方式
-    PyObject *scale_data_list = PyList_New(self->scale_len);
-    for (int i = 0; i < self->scale_len; ++i) {
-        PyObject *scale = PyFloat_FromDouble(self->scale_data[i]);
-        PyList_SET_ITEM(scale_data_list, i, scale);
-    }
-    return scale_data_list;
+    // 创建一个 NumPy 数组来存储 scale_data
+    npy_intp dims[] = {self->scale_len}; // 设置数组的维度
+    PyObject *scale_array = PyArray_SimpleNewFromData(1, dims, NPY_FLOAT, self->scale_data);
+
+    // 返回 NumPy 数组
+    return scale_array;
 }
+
 
 // PyGetSetDef 定义成员属性，使用 getter 函数获取属性值
 static PyGetSetDef TensorPropertiesGetSet[] = {
@@ -242,55 +347,10 @@ static PyObject* PyDNNTensor_get_properties(PyDNNTensor *self, void *closure) {
     // tensor_type
     properties_obj->tensor_type = self->properties.tensorType;
 
+    properties_obj->scale_len = self->properties.scale.scaleLen;
+    properties_obj->scale_data = self->properties.scale.scaleData;
+
     return Py_BuildValue("O", properties_obj);
-}
-
-/**
- * C++ => Python
- * Convert buffer to numpy array
- * @param arr
- * @param properties
- * @return PyArrayObject*
- */
-PyObject* buffer_2_numpy(void *arr, hbDNNTensorProperties &properties, int npy_type, int32_t type_size) {
-    hbDNNTensorShape buffer_shape = properties.validShape;
-    int size = 1;
-    for (int i = 0; i < 4; i++) {
-        size *= buffer_shape.dimensionSize[i];
-    }
-
-    // 创建 numpy 数组对象
-    npy_intp dims[4];
-    for (int i = 0; i < 4; ++i) {
-        dims[i] = buffer_shape.dimensionSize[i];
-    }
-    PyObject *array = PyArray_SimpleNew(4, dims, npy_type);
-    if (!array) {
-        PyErr_SetString(PyExc_RuntimeError, "Failed to create numpy array.");
-        return NULL;
-    }
-
-    // 从缓冲区复制数据到 numpy 数组中
-    void *data_ptr = PyArray_DATA((PyArrayObject*)array);
-    memcpy(data_ptr, arr, size * type_size);
-
-    return array;
-}
-
-PyObject* buffer_2_pyarray(void *arr, hbDNNTensorProperties &properties) {
-    hbDNNDataType dataType = static_cast<hbDNNDataType>(properties.tensorType);
-
-    switch (dataType) {
-        case HB_DNN_TENSOR_TYPE_S8:
-            return buffer_2_numpy(reinterpret_cast<int8_t *>(arr), properties, NPY_INT8, sizeof(int8_t));
-        case HB_DNN_TENSOR_TYPE_S32:
-            return buffer_2_numpy(reinterpret_cast<int32_t *>(arr), properties, NPY_INT32, sizeof(int32_t));
-        case HB_DNN_TENSOR_TYPE_F32:
-            return buffer_2_numpy(reinterpret_cast<float *>(arr), properties, NPY_FLOAT, sizeof(float));
-        default:
-            // Do not support data type, using default int8 for output.
-            return buffer_2_numpy(reinterpret_cast<int8_t *>(arr), properties, NPY_INT8, sizeof(int8_t));
-    }
 }
 
 // 获取 buffer 成员属性的 getter 函数
@@ -478,52 +538,6 @@ static PyObject* model_get_tensor_outputs(Model_Object *self, void *closure) {
 static PyObject* model_get_estimate_latency(Model_Object *self, void *closure) {
     // 将延迟时间转换为 Python 整数对象并返回
     return PyLong_FromLong(self->m_estimate_latency);
-}
-
-int32_t NumpyCopyHelper(hbDNNTensor *input_tensor,
-                        unsigned char *src,
-                        uint32_t size) {
-  void *dst = input_tensor->sysMem[0].virAddr;
-  switch (input_tensor->properties.tensorType) {
-    case HB_DNN_IMG_TYPE_YUV444:
-    case HB_DNN_IMG_TYPE_RGB:
-    case HB_DNN_IMG_TYPE_BGR:
-    case HB_DNN_TENSOR_TYPE_U8:
-      memcpy(dst, src, size);
-      break;
-    case HB_DNN_TENSOR_TYPE_S8:
-      memcpy(dst, src, size);
-      break;
-    case HB_DNN_TENSOR_TYPE_S16:
-      memcpy(dst, src, size);
-      break;
-    case HB_DNN_TENSOR_TYPE_U16:
-      memcpy(dst, src, size);
-      break;
-    case HB_DNN_TENSOR_TYPE_F32:
-      memcpy(dst, src, size);
-      break;
-    case HB_DNN_TENSOR_TYPE_S32:
-      memcpy(dst, src, size);
-      break;
-    case HB_DNN_TENSOR_TYPE_U32:
-      memcpy(dst, src, size);
-      break;
-    case HB_DNN_TENSOR_TYPE_F64:
-      memcpy(dst, src, size);
-      break;
-    case HB_DNN_TENSOR_TYPE_S64:
-      memcpy(dst, src, size);
-      break;
-    case HB_DNN_TENSOR_TYPE_U64:
-      memcpy(dst, src, size);
-      break;
-    default:
-      std::cout << "Transpose data type error: "
-                << input_tensor->properties.tensorType << std::endl;
-      return -1;
-  }
-  return 0;
 }
 
 static int32_t forward(Model_Object *model_obj, unsigned char *data_ptr, int32_t data_size, int32_t core_id, int32_t priority) {
