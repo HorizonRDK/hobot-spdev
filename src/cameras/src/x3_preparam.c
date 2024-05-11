@@ -540,7 +540,7 @@ int vin_param_init(const int cam_idx, x3_vin_info_t *vin_info)
             sensor_id = check_sensor(i2c_bus, s_sensor_id_list, ARRAY_SIZE(s_sensor_id_list));
     } else if (cam_idx == -1) {
         for (int i = 0; i < MAX_CAMERAS; i++) {
-            if (!camera_info[cam_idx].enable)
+            if (!camera_info[i].enable)
                 continue;
             i2c_bus = camera_info[i].i2c_bus;
             mipi_host = camera_info[i].mipi_host;
