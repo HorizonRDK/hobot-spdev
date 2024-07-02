@@ -544,8 +544,6 @@ static int32_t forward(Model_Object *model_obj, unsigned char *data_ptr, int32_t
     int32_t ret = 0;
     uint32_t input_count = model_obj->m_input_count;
 
-
-
     for (uint32_t index = 0; index < input_count; index++) {
         hbDNNTensor *input_tensor = &model_obj->m_inputs[index];
         auto tensor_type = static_cast<hbDNNDataType>(input_tensor->properties.tensorType);
@@ -757,7 +755,8 @@ static int32_t prepare_model_tensor(Model_Object *model_obj)
         hbDNNGetInputTensorProperties(&properties, dnn_handle, i);
         model_obj->m_inputs[i].properties = properties;
         hbSysAllocCachedMem(model_obj->m_inputs[i].sysMem,
-            properties.validShape.dimensionSize[2] * ALIGN_16(properties.validShape.dimensionSize[3]) * 3 / 2);
+            properties.validShape.dimensionSize[0] * ALIGN_16(properties.validShape.dimensionSize[1]) *
+            properties.validShape.dimensionSize[2] * ALIGN_16(properties.validShape.dimensionSize[3]));
         if (model_obj->m_inputs[i].sysMem == NULL) {
             // 内存分配失败，释放之前已分配的内存
             release_model_tensor(model_obj);
